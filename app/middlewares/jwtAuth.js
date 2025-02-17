@@ -1,5 +1,7 @@
 const JWT = require("jsonwebtoken");
 const crypto = require('crypto');
+const { errorResponse, successResponse ,handleResponse} = require('../utils/helper');
+
 
 
 
@@ -88,10 +90,31 @@ const verifyUser = async (req, res, next) => {
   }
 };
 
+const verifyRole = (req, res) => {
+  const { user_role, encryptedToken } = req.user;
+
+  let dashboardUrl = '';
+  let responseMessage = '';
+
+  if (user_role === 'super_admin') {
+      responseMessage = 'Super Admin Login successfully!';
+     
+  } else if (user_role === 'admin') {
+      responseMessage = 'Admin Login successfully!';
+  } else if (user_role === 'user') {
+      responseMessage = 'User Login successfully!';
+  }
+
+ 
+  return successResponse(res, responseMessage, { encryptedToken,user_role }, 200);
+};
+
+
 module.exports = {
   signAccessToken,
   signResetToken,
   verifyUser,
   decryptToken,
-  encryptToken
+  encryptToken,
+  verifyRole
 };

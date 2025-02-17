@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { userRegistrationSchema, userLoginSchema } = require('../vailidators/usersValidaters');
+const { userRegistrationSchema, userLoginSchema } = require('../vailidators/validaters');
 const { errorResponse, successResponse } = require('../../utils/helper');
 const { Users } = require('../../models');
 const{jwtAuthentication}=require("../../middlewares")
@@ -45,8 +45,7 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-
-exports.loginUser = async (req, res) => {
+exports.loginUser = async (req, res, next) => {
     const { error } = userLoginSchema.validate(req.body);
     if (error) return errorResponse(res, error.details[0].message, 400);
 
@@ -65,24 +64,23 @@ exports.loginUser = async (req, res) => {
             return errorResponse(res, 'Invalid username or password.', 400);
         }
 
-        // Check user role and send the response accordingly
+      
         const accessToken = await jwtAuthentication.signAccessToken(user.id, user.user_role);
         const encryptedToken = jwtAuthentication.encryptToken(accessToken);
 
-        if (user.user_role === "super-admin") {
-            return successResponse(res, `Super Admin Login successfully!`, { encryptedToken }, 200);
-        } else if (user.user_role === "admin") {
-            return successResponse(res, `Admin Login successfully!`, { encryptedToken }, 200);
-        }
+      
+        req.user = {
+            id: user.id,
+            user_role: user.user_role,
+            encryptedToken: encryptedToken
+        };
 
-        // Default user login response
-        return successResponse(res, `User Login successfully!`, { encryptedToken }, 200);
+        next(); 
 
     } catch (error) {
         return errorResponse(res, 'An unexpected error occurred during login.', 500, error.message);
     }
 };
-
 
 exports.me = async (req, res) => {
     try {
@@ -105,7 +103,6 @@ exports.me = async (req, res) => {
         return errorResponse(res, "Internal server error", 500, error.message);
     }
 };
-
 
 exports.updateUser = async (req, res) => {
    

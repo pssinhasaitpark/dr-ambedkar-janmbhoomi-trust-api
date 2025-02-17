@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 require("dotenv").config();
-//const host = process.env.HOST;
+const host = process.env.HOST;
 
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -11,8 +11,10 @@ const bodyParser = require("body-parser");
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
-      "http://localhost:3001"
+      "http://192.168.0.117:3000",
+      "http://192.168.0.115:3000",
+      "https://dr-ambedkarnagar-janmbhoomi.netlify.app/"
+
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,
@@ -42,10 +44,10 @@ app.get("/", (req, res) => {
 const port = process.env.PORT || 5050;
 
 
-app.listen(port,  () =>
-  console.log(`App is listening at port:http://localhost:${port}`)
-);
-
-// app.listen(port,host,  () =>
-//   console.log(`App is listening at port:http://${host}:${port}`)
+// app.listen(port,  () =>
+//   console.log(`App is listening at port:http://localhost:${port}`)
 // );
+
+app.listen(port,host,  () =>
+  console.log(`App is listening at port:http://${host}:${port}`)
+);
