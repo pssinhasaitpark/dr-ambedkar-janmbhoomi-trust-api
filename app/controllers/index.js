@@ -1,6 +1,9 @@
 module.exports = {
     users: require('./user/user'),
-    banner:require("./banner"),
-    biography:require('./biography'),
-    books:require("./books")
+    banner:require('./pages/banner'),
+    biography:require('./pages/biography'),
+    books:require('./pages/books'),
+    events:require('./pages/events'),
+    donation:require('./pages/donation'),
+    news:require("./pages/news")
 }

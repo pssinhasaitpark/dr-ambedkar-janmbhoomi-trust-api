@@ -1,12 +1,13 @@
-const { successResponse, errorResponse } = require("../utils/helper");
-const {  Book } = require("../models");
-const { bookSchema } = require("./vailidators/validaters");
-const cloudinary = require("../utils/cloudinaryConfig");
+const { successResponse, errorResponse } = require("../../utils/helper");
+const {  Book } = require("../../models");
+const { bookSchema } = require("../vailidators/validaters");
+const cloudinary = require("../../middlewares/cloudinaryConfig");
+
 
 
 exports.addBookDetails=async(req,res) =>{
   try{
-  const {title,name,book_details}=req.body;
+  const {title,name,description}=req.body;
 
   const { error } = bookSchema.validate(req.body);
         if (error) {
@@ -24,7 +25,7 @@ exports.addBookDetails=async(req,res) =>{
    const data = {
     name,
     title,
-    book_details,
+    description,
     image_urls: imageUrls,
   };
 
@@ -46,7 +47,10 @@ exports.addBookDetails=async(req,res) =>{
 
 exports.getBooksData = async (req, res) => {
   try {
-    const data = await Book.find();
+    const data = await Book.find().sort({ createdAt: -1 });
+    if (!data || data.length === 0) {
+      return errorResponse(res, "No data available in the database", 404);
+    }
     successResponse(res, "Books data fetched successfully!",data, 200);
   } catch (error) {
     errorResponse(res, "Error fetching Books data", 500, error.message);
@@ -56,8 +60,9 @@ exports.getBooksData = async (req, res) => {
 exports.getBooksById = async (req, res) => {
   try {
     if (!req.params.id) {
-      return errorResponse(res, "please provide id", 404);
-    }
+      return errorResponse(res, "Please provide an ID", 400);
+  }
+
     const data = await Book.findById(req.params.id);
 
     if (!data) {
@@ -76,7 +81,7 @@ exports.getBooksById = async (req, res) => {
 
 exports.updateBookDetails = async (req, res) => {
   const { id } = req.params;
-  const { title, name, book_details } = req.body;
+  const { title, name, description } = req.body;
 
   try {
     let imageUrls = [];
@@ -94,7 +99,7 @@ exports.updateBookDetails = async (req, res) => {
       {
         title,
         name,
-        book_details,
+        description,
         image_urls: imageUrls, 
       },
       { new: true } 

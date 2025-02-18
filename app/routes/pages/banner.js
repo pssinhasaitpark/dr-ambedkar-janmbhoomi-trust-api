@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const {banner}=require("../controllers")
-const { upload, convertImagesToWebP } = require('../utils/fileUploader'); 
+const {banner}=require("../../controllers")
+const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'); 
 
 
   router.post("/add", upload, convertImagesToWebP,banner.createBanner);

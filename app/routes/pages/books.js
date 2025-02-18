@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {books}=require("../controllers")
-const { upload, convertImagesToWebP } = require('../utils/fileUploader'); 
+const {books}=require("../../controllers")
+const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'); 
+
 
 router.post("/",upload,convertImagesToWebP,books.addBookDetails)
 router.get("/",books.getBooksData);

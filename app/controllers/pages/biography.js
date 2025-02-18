@@ -1,11 +1,13 @@
-const { successResponse, errorResponse } = require("../utils/helper");
-const { Biography } = require("../models");
-const { biographySchema } = require("./vailidators/validaters");
-const cloudinary = require("../utils/cloudinaryConfig");
+const { successResponse, errorResponse } = require("../../utils/helper");
+const { Biography } = require("../../models");
+const { biographySchema } = require("../vailidators/validaters");
+const cloudinary = require("../../middlewares/cloudinaryConfig");
+
 
 
 exports.createBiography=async(req,res) =>{
   try{
+  // const {title,name,biography,born_details,death_details,short_description,awards,achievements}=req.body;
   const {title,name,biography}=req.body;
   
     let imageUrls = [];
@@ -20,6 +22,11 @@ exports.createBiography=async(req,res) =>{
     name,
     title,
     biography,
+    // born_details,
+    // death_details,
+    // short_description,
+    // awards,
+    // achievements,
     image_urls: imageUrls,
   };
 
@@ -41,7 +48,10 @@ exports.createBiography=async(req,res) =>{
 
 exports.getBiographyData = async (req, res) => {
   try {
-    const data = await Biography.find();
+    const data = await Biography.find().sort({ createdAt: -1 });
+    if (!data || data.length === 0) {
+      return errorResponse(res, "No data available in the database", 404);
+    }
     successResponse(res, "Biography data fetched successfully!",data, 200);
   } catch (error) {
     errorResponse(res, "Error fetching biography data", 500, error.message);
@@ -51,8 +61,9 @@ exports.getBiographyData = async (req, res) => {
 exports.getBiographyById = async (req, res) => {
   try {
     if (!req.params.id) {
-      return errorResponse(res, "please provide id", 404);
-    }
+      return errorResponse(res, "Please provide an ID", 400);
+  }
+
     const data = await Biography.findById(req.params.id);
 
     if (!data) {
@@ -70,17 +81,46 @@ exports.getBiographyById = async (req, res) => {
 };
 
 exports.updateBiography = async (req, res) => {
-  try {
-    const data = await Biography.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!data) {
-      return errorResponse(res, "Biography not found", 404);
-    }
-    successResponse(res, "Biography updated successfully", data, 200);
-  } catch (error) {
-    errorResponse(res, "Error updating biography data", 400, error.message);
-  }
+   const { id } = req.params;
+   const {title,name,biography,born_details,death_details,short_description,awards,achievements}=req.body;
+
+   try {
+     let imageUrls = [];
+ 
+ 
+     if (req.files && req.files.length > 0) {
+       const uploadPromises = req.files.map((file) =>
+         cloudinary.uploadImageToCloudinary(file.buffer)
+       );
+       imageUrls = await Promise.all(uploadPromises);
+     }
+    
+     
+     const updatedBiography = await Biography.findByIdAndUpdate(
+       id, 
+       {
+         title,
+         name,
+         biography,
+        //  born_details,
+        //  death_details,
+        //  short_description,
+        //  awards,
+        //  achievements,
+         image_urls: imageUrls, 
+       },
+       { new: true } 
+     );
+ 
+     if (!updatedBiography) {
+       return errorResponse(res, 'Biography not found.', 404);
+     }
+ 
+     return successResponse(res, 'Biography  updated successfully.', updatedBiography, 200);
+   } catch (error) {
+     console.error(error);
+     return errorResponse(res, 'Error updating book details data', 500, error.message);
+   }
 };
 
 exports.deleteBiography = async (req, res) => {
