@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const {users}=require("../controllers")
-const { verifyUser,verifyRole} = require('../middlewares/jwtAuth');
+const {users}=require("../../controllers")
+const { verifyUser,verifyRole} = require('../../middlewares/jwtAuth');
 
   router.post("/register", users.registerUser);
   router.post("/login", users.loginUser, verifyRole);

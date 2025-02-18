@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const { userRegistrationSchema, userLoginSchema } = require('../vailidators/validaters');
+// const { authentication } = require('../vailidators/validaters');
+const { authentication } = require('../vailidators/validaters');
 const { errorResponse, successResponse } = require('../../utils/helper');
 const { Users } = require('../../models');
 const{jwtAuthentication}=require("../../middlewares")

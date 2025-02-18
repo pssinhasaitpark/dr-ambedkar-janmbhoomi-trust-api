@@ -11,9 +11,10 @@ const bodyParser = require("body-parser");
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
       "http://192.168.0.117:3000",
       "http://192.168.0.115:3000",
-      "https://dr-ambedkarnagar-janmbhoomi.netlify.app/"
+      "https://dr-ambedkarnagar-janmbhoomi.netlify.app"
 
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],

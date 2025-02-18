@@ -1,7 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const sharp = require("sharp");
-const { handleResponse } = require("./helper");
+const { handleResponse } = require("../utils/helper");
 
 const storage = multer.memoryStorage();
 
@@ -13,10 +13,14 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter,
+// const upload = multer({
+//   storage,
+//   limits: { fileSize: 50 * 1024 * 1024 },
+//   fileFilter,
+// }).array("images", 10);
+
+const upload =  multer({
+  limits: { fieldSize: 50 * 1024 * 1024 }
 }).array("images", 10);
 
 const convertImagesToWebP = async (req, res, next) => {

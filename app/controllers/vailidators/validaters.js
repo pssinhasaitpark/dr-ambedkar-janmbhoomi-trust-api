@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const userRegistrationSchema = Joi.object({
+exports.userRegistrationSchema = Joi.object({
   user_name: Joi.string().max(50).required(),
   first_name: Joi.string().max(50).required(),
   last_name: Joi.string().max(50).required(),
@@ -24,12 +24,12 @@ const userRegistrationSchema = Joi.object({
   }),
 });
 
-const userLoginSchema = Joi.object({
+exports.userLoginSchema = Joi.object({
   email: Joi.string().email().max(50).required(),
   password: Joi.string().min(8).required(),
 });
 
-const bannerSchema = Joi.object({
+exports.bannerSchema = Joi.object({
   name:Joi.string().min(3).required(),
   heading: Joi.string().min(3).required(),
   beginning_date: Joi.string().max(50).required(),
@@ -38,17 +38,34 @@ const bannerSchema = Joi.object({
   location: Joi.string().required(),
 });
 
-const biographySchema = Joi.object({
+exports.biographySchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
   biography: Joi.string().required(),
- 
 });
 
-const bookSchema = Joi.object({
+exports.eventsSchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
-  book_details: Joi.string().required(),
+  description: Joi.string().required()
 });
 
-module.exports = { userRegistrationSchema, userLoginSchema, bannerSchema, biographySchema,bookSchema};
+exports.donationSchema = Joi.object({
+  name: Joi.string().required(),
+  title: Joi.string().required(),
+  description: Joi.string().required()
+});
+
+exports.newsSchema = Joi.object({
+  name: Joi.string().required(),
+  title: Joi.string().required(),
+  description: Joi.string().required()
+});
+
+exports.bookSchema = Joi.object({
+  name: Joi.string().required(),
+  title: Joi.string().required(),
+  description: Joi.string().required(),
+});
+
+//module.exports = { userRegistrationSchema, userLoginSchema, bannerSchema, biographySchema,bookSchema,eventsSchema,donationSchema,newsSchema};

@@ -1,7 +1,7 @@
-const { bannerSchema } = require('./vailidators/validaters');
-const { errorResponse, successResponse } = require('../utils/helper');
-const { Banner } = require('../models');
-const cloudinary = require("../utils/cloudinaryConfig");
+const { bannerSchema } = require('../vailidators/validaters');
+const { errorResponse, successResponse } = require('../../utils/helper');
+const { Banner } = require('../../models');
+const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 
 exports.createBanner = async (req, res) => {
@@ -43,7 +43,12 @@ exports.createBanner = async (req, res) => {
 
 exports.getAllBanners = async (req, res) => {
     try {
-        const banners = await Banner.find();
+     
+        const banners = await Banner.find().sort({ createdAt: -1 });
+        if (!banners || banners.length === 0) {
+            return errorResponse(res, "No data available in the database", 404);
+          }
+
         return successResponse(res, 'Banners retrieved successfully.', banners, 200);
     } catch (error) {
         console.error(error);
@@ -51,17 +56,16 @@ exports.getAllBanners = async (req, res) => {
     }
 };
 
-
 exports.getBannerById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const banner = await Banner.findById(id);
-        
-        if (!banner) {
-            return errorResponse(res, 'Banner not found.', 404);
+        if (id) {
+            return errorResponse(res, "Please provide an ID", 400);
         }
 
+        const banner = await Banner.findById(id);
+        
         return successResponse(res, 'Banner retrieved successfully.', banner, 200);
     } catch (error) {
         console.error(error);
