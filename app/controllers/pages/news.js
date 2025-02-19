@@ -1,8 +1,7 @@
-const { successResponse, errorResponse } = require("../../utils/helper");
+const { handleResponse } = require("../../utils/helper");
 const { News } = require("../../models");
-const { newsSchema } = require("../vailidators/validaters");
+const { newsSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
-
 
 
 exports.addNewsData = async (req, res) => {
@@ -10,8 +9,7 @@ exports.addNewsData = async (req, res) => {
 
         const { error } = newsSchema.validate(req.body);
         if (error) {
-
-            return errorResponse(res, error.details[0].message, 400);
+            return handleResponse(res, 400, error.details[0].message);
         }
         const { title, name, description } = req.body;
 
@@ -27,21 +25,21 @@ exports.addNewsData = async (req, res) => {
             name,
             title,
             description,
-            image_urls: imageUrls,
+            images: imageUrls,
         };
 
         const newNews = new News(data);
         await newNews.save();
 
-        successResponse(
+        return handleResponse(
             res,
-            "News details  added successfully!",
-            newNews,
-            201
+            201,
+            "News details added successfully!",
+            newNews
         );
     } catch (error) {
         console.error(error);
-        errorResponse(res, "Error in adding news details", 500, error.message);
+        return handleResponse(res, 500, "Error in adding news details", error.message);
     }
 
 };
@@ -51,30 +49,30 @@ exports.getNewsData = async (req, res) => {
         const data = await News.find().sort({ createdAt: -1 });
 
         if (!data || data.length === 0) {
-            return errorResponse(res, "No news data available in the database", 404);
+            return handleResponse(res, 404, "No news data available in the database");
         }
 
-        successResponse(res, "All News and update details fetched successfully!", data, 200);
+        return handleResponse(res, 200, "All News and update details fetched successfully!", data);
     } catch (error) {
-        errorResponse(res, "Error fetching News and update details", 500, error.message);
+        return handleResponse(res, 500, "Error fetching News and update details", error.message);
     }
 };
 
 exports.getNewsDataById = async (req, res) => {
     try {
         if (!req.params.id) {
-            return errorResponse(res, "Please provide an ID", 400);
+            return handleResponse(res, 400, "Please provide an ID");
         }
 
         const data = await News.findById(req.params.id);
 
         if (!data) {
-            return errorResponse(res, "Data not found with the provided ID", 404);
+            return handleResponse(res, 404, "Data not found with the provided ID");
         }
 
-        successResponse(res, "Data retrieved successfully!", data, 200);
+        return handleResponse(res, 200, "Data retrieved successfully!", data);
     } catch (error) {
-        errorResponse(res, "Error retrieving data", 500, error.message);
+        return handleResponse(res, 500, "Error retrieving data", error.message);
     }
 };
 
@@ -85,7 +83,6 @@ exports.updateNewsData = async (req, res) => {
     try {
         let imageUrls = [];
 
-
         if (req.files && req.files.length > 0) {
             const uploadPromises = req.files.map((file) =>
                 cloudinary.uploadImageToCloudinary(file.buffer)
@@ -93,26 +90,25 @@ exports.updateNewsData = async (req, res) => {
             imageUrls = await Promise.all(uploadPromises);
         }
 
-
         const updatedNews = await News.findByIdAndUpdate(
             id,
             {
                 title,
                 name,
                 description,
-                image_urls: imageUrls,
+                images: imageUrls,
             },
             { new: true }
         );
 
         if (!updatedNews) {
-            return errorResponse(res, 'News data not found.', 404);
+            return handleResponse(res, 404, 'News data not found.');
         }
 
-        return successResponse(res, 'Data updated successfully.', updatedNews, 200);
+        return handleResponse(res, 200, 'Data updated successfully.', updatedNews);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Error updating news details', 500, error.message);
+        return handleResponse(res, 500, 'Error updating news details', error.message);
     }
 };
 
@@ -120,11 +116,10 @@ exports.deleteNewsData = async (req, res) => {
     try {
         const data = await News.findByIdAndDelete(req.params.id);
         if (!data) {
-            return errorResponse(res, "Data not found", 404);
+            return handleResponse(res, 404, "Data not found");
         }
-        successResponse(res, "News details  deleted successfully", { data }, 200);
+        return handleResponse(res, 200, "News details deleted successfully", { data });
     } catch (error) {
-        errorResponse(res, "Error deleting News details", 500, error.message);
+        return handleResponse(res, 500, "Error deleting News details", error.message);
     }
 };
-

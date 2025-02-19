@@ -5,5 +5,7 @@ module.exports = {
     books:require('./pages/books'),
     events:require('./pages/events'),
     donation:require('./pages/donation'),
-    news:require("./pages/news")
+    news:require("./pages/news"),
+    gallery:require("./pages/gallery"),
+    contact:require("./user/contact")
 }
