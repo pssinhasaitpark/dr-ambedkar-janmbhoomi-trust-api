@@ -1,16 +1,15 @@
-const { bannerSchema } = require('../vailidators/validaters');
-const { errorResponse, successResponse } = require('../../utils/helper');
+const { handleResponse } = require('../../utils/helper');
+const { bannerSchema } = require('../../vailidators/validaters');
 const { Banner } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
-
 exports.createBanner = async (req, res) => {
     try {
-     
         const { error } = bannerSchema.validate(req.body);
         if (error) {
-            return errorResponse(res, error.details[0].message, 400);
+            return handleResponse(res, 400, error.details[0].message);
         }
+
         const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
 
         let imageUrls = [];
@@ -33,26 +32,24 @@ exports.createBanner = async (req, res) => {
 
         await newBanner.save();
 
-        return successResponse(res, 'Banner Details added successfully!', newBanner, 201);
+        return handleResponse(res, 201, 'Banner details added successfully!', newBanner);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Failed to add banner details.', 500);
+        return handleResponse(res, 500, 'Failed to add banner details.');
     }
 };
 
-
 exports.getAllBanners = async (req, res) => {
     try {
-     
         const banners = await Banner.find().sort({ createdAt: -1 });
         if (!banners || banners.length === 0) {
-            return errorResponse(res, "No data available in the database", 404);
-          }
+            return handleResponse(res, 404, 'No data available in the database');
+        }
 
-        return successResponse(res, 'Banners retrieved successfully.', banners, 200);
+        return handleResponse(res, 200, 'Banners retrieved successfully.', banners);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Failed to retrieve banners.', 500);
+        return handleResponse(res, 500, 'Failed to retrieve banners.');
     }
 };
 
@@ -60,23 +57,26 @@ exports.getBannerById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        if (id) {
-            return errorResponse(res, "Please provide an ID", 400);
+        if (!id) {
+            return handleResponse(res, 400, "Please provide an ID");
         }
 
         const banner = await Banner.findById(id);
-        
-        return successResponse(res, 'Banner retrieved successfully.', banner, 200);
+
+        if (!banner) {
+            return handleResponse(res, 404, `No banner found for ID: ${id}`);
+        }
+
+        return handleResponse(res, 200, 'Banner retrieved successfully.', banner);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Failed to retrieve banner.', 500);
+        return handleResponse(res, 500, 'Failed to retrieve banner.');
     }
 };
 
-
 exports.updateBanner = async (req, res) => {
     const { id } = req.params;
-    const { name, heading, beginning_date, completion_date, Opening_date, location } = req.body;
+    const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
 
     try {
         let imageUrls = [];
@@ -92,19 +92,19 @@ exports.updateBanner = async (req, res) => {
             heading,
             beginning_date,
             completion_date,
-            Opening_date,
+            opening_date,
             location,
-            image_urls:imageUrls
+            image_urls: imageUrls
         }, { new: true });
 
         if (!updatedBanner) {
-            return errorResponse(res, 'Banner not found.', 404);
+            return handleResponse(res, 404, 'Banner not found.');
         }
 
-        return successResponse(res, 'Banner updated successfully.', updatedBanner, 200);
+        return handleResponse(res, 200, 'Banner updated successfully.', updatedBanner);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Failed to update banner.', 500);
+        return handleResponse(res, 500, 'Failed to update banner.');
     }
 };
 
@@ -115,12 +115,12 @@ exports.deleteBanner = async (req, res) => {
         const banner = await Banner.findByIdAndDelete(id);
 
         if (!banner) {
-            return errorResponse(res, 'Banner not found.', 404);
+            return handleResponse(res, 404, 'Banner not found.');
         }
 
-        return successResponse(res, 'Banner deleted successfully.', banner, 200);
+        return handleResponse(res, 200, 'Banner deleted successfully.', banner);
     } catch (error) {
         console.error(error);
-        return errorResponse(res, 'Failed to delete banner.', 500);
+        return handleResponse(res, 500, 'Failed to delete banner.');
     }
 };

@@ -44,28 +44,34 @@ exports.biographySchema = Joi.object({
   biography: Joi.string().required(),
 });
 
-exports.eventsSchema = Joi.object({
+exports.validationSchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
   description: Joi.string().required()
 });
 
-exports.donationSchema = Joi.object({
+exports.contactSchema=Joi.object({
+  first_name: Joi.string().max(50).required(),
+  last_name: Joi.string().max(50).required(),
+  email: Joi.string()
+    .email({ tlds: { allow: ["com", "net", "org"] } })
+    .required()
+    .messages({
+      "string.email": "Please provide a valid email",
+      "string.empty": "Email cannot be empty",
+    }),
+    phone_no: Joi.string()
+    .pattern(/^[0-9]{10,13}$/)
+    .required()
+    .messages({
+      "string.pattern.base":
+        "Phone number must be between 10 digits and contain only numbers.",
+    }),
+    location:Joi.string().required()
+})
+exports.gallerySchema=Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
-  description: Joi.string().required()
-});
-
-exports.newsSchema = Joi.object({
-  name: Joi.string().required(),
-  title: Joi.string().required(),
-  description: Joi.string().required()
-});
-
-exports.bookSchema = Joi.object({
-  name: Joi.string().required(),
-  title: Joi.string().required(),
-  description: Joi.string().required(),
-});
-
-//module.exports = { userRegistrationSchema, userLoginSchema, bannerSchema, biographySchema,bookSchema,eventsSchema,donationSchema,newsSchema};
+  short_description: Joi.string().required(),
+  long_description: Joi.string().required()
+})

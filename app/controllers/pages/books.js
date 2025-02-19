@@ -1,19 +1,17 @@
-const { successResponse, errorResponse } = require("../../utils/helper");
-const {  Book } = require("../../models");
-const { bookSchema } = require("../vailidators/validaters");
+const { handleResponse } = require("../../utils/helper");
+const { Book } = require("../../models");
+const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
+exports.addBookDetails = async (req, res) => {
+  try {
+    const { title, name, description } = req.body;
 
+    const { error } = validationSchema.validate(req.body);
+    if (error) {
+      return handleResponse(res, 400, error.details[0].message);
+    }
 
-exports.addBookDetails=async(req,res) =>{
-  try{
-  const {title,name,description}=req.body;
-
-  const { error } = bookSchema.validate(req.body);
-        if (error) {
-            return errorResponse(res, error.details[0].message, 400);
-        }
-  
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file) =>
@@ -21,71 +19,65 @@ exports.addBookDetails=async(req,res) =>{
       );
       imageUrls = await Promise.all(uploadPromises);
     }
-  
-   const data = {
-    name,
-    title,
-    description,
-    image_urls: imageUrls,
-  };
 
-  const newBook = new Book(data);
-  await newBook.save();
+    const data = {
+      name,
+      title,
+      description,
+      images: imageUrls,
+    };
 
-  successResponse(
-    res,
-    "Book Added successfully!",
-    newBook,
-    201
-  );
-} catch (error) {
-  console.error(error);
-  errorResponse(res, "Error creating Books", 500, error.message);
-}
+    const newBook = new Book(data);
+    await newBook.save();
 
+    return handleResponse(res, 201, "Book Added successfully!", newBook);
+  } catch (error) {
+    console.error(error);
+    return handleResponse(res, 500, "Error creating Books", error.message);
+  }
 };
 
 exports.getBooksData = async (req, res) => {
   try {
     const data = await Book.find().sort({ createdAt: -1 });
     if (!data || data.length === 0) {
-      return errorResponse(res, "No data available in the database", 404);
+      return handleResponse(res, 404, "No data available in the database");
     }
-    successResponse(res, "Books data fetched successfully!",data, 200);
+    return handleResponse(res, 200, "Books data fetched successfully!", data);
   } catch (error) {
-    errorResponse(res, "Error fetching Books data", 500, error.message);
+    return handleResponse(res, 500, "Error fetching Books data", error.message);
   }
 };
 
 exports.getBooksById = async (req, res) => {
   try {
     if (!req.params.id) {
-      return errorResponse(res, "Please provide an ID", 400);
-  }
+      return handleResponse(res, 400, "Please provide an ID");
+    }
 
     const data = await Book.findById(req.params.id);
 
     if (!data) {
-      return errorResponse(res, "Book not found with provided id", 404);
+      return handleResponse(res, 404, "Book not found with provided id");
     }
-    successResponse(
-      res,
-      "Book data retrieved successfully!",
-       data ,
-      200
-    );
+    return handleResponse(res, 200, "Book data retrieved successfully!", data);
   } catch (error) {
-    errorResponse(res, "Error retrieving Book data", 500, error.message);
+    return handleResponse(res, 500, "Error retrieving Book data", error.message);
   }
 };
 
 exports.updateBookDetails = async (req, res) => {
+
+  const { error } = validationSchema.validate(req.body);
+    if (error) {
+      return handleResponse(res, 400, error.details[0].message);
+    }
+
   const { id } = req.params;
   const { title, name, description } = req.body;
 
   try {
     let imageUrls = [];
-
 
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file) =>
@@ -95,24 +87,24 @@ exports.updateBookDetails = async (req, res) => {
     }
 
     const updatedBook = await Book.findByIdAndUpdate(
-      id, 
+      id,
       {
         title,
         name,
         description,
-        image_urls: imageUrls, 
+        images: imageUrls,
       },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedBook) {
-      return errorResponse(res, 'Book not found.', 404);
+      return handleResponse(res, 404, "Book not found.");
     }
 
-    return successResponse(res, 'Book details updated successfully.', updatedBook, 200);
+    return handleResponse(res, 200, "Book details updated successfully.", updatedBook);
   } catch (error) {
     console.error(error);
-    return errorResponse(res, 'Error updating book details data', 500, error.message);
+    return handleResponse(res, 500, "Error updating book details data", error.message);
   }
 };
 
@@ -120,10 +112,11 @@ exports.deleteBookDetails = async (req, res) => {
   try {
     const data = await Book.findByIdAndDelete(req.params.id);
     if (!data) {
-      return errorResponse(res, "Book details not found", 404);
+      return handleResponse(res, 404, "Book details not found");
     }
-    successResponse(res, "Book details deleted successfully", {FormDataEvent}, 200);
+
+    return handleResponse(res, 200, "Book details deleted successfully", {});
   } catch (error) {
-    errorResponse(res, "Error deleting Book details data", 500, error.message);
+    return handleResponse(res, 500, "Error deleting Book details data", error.message);
   }
 };

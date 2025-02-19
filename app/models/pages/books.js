@@ -1,16 +1,13 @@
 const mongoose = require("mongoose");
 
-const donationSchema = new mongoose.Schema({
+const bookSchema = new mongoose.Schema({
   title: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String, required: true },
-  image_urls: [String],
+  images: [String],
 },
   {
     timestamps: true,
   });
 
-module.exports = mongoose.model("donation", donationSchema);
-
-
-
+module.exports = mongoose.model("book_details", bookSchema);
