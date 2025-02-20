@@ -1,48 +1,64 @@
 const { handleResponse } = require("../../utils/helper");
 const { News } = require("../../models");
-const { newsSchema } = require("../../vailidators/validaters");
+const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 
-exports.addNewsData = async (req, res) => {
+exports.addNewsData = async (req, res, next) => {
     try {
-
-        const { error } = newsSchema.validate(req.body);
-        if (error) {
-            return handleResponse(res, 400, error.details[0].message);
-        }
-        const { title, name, description } = req.body;
-
-        let imageUrls = [];
-        if (req.files && req.files.length > 0) {
-            const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            imageUrls = await Promise.all(uploadPromises);
-        }
-
-        const data = {
-            name,
-            title,
-            description,
-            images: imageUrls,
-        };
-
-        const newNews = new News(data);
-        await newNews.save();
-
-        return handleResponse(
-            res,
-            201,
-            "News details added successfully!",
-            newNews
+      const { error } = validationSchema.validate(req.body);
+      if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+      }
+  
+      const { title, name, description } = req.body;
+  
+      const { id } = req.query.id ? req.query : req.body;
+  
+      let existingNews = null;
+      if (id) {
+        existingNews = await News.findById(id); 
+      }
+  
+      let imageUrls = [];
+      if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map((file) =>
+          cloudinary.uploadImageToCloudinary(file.buffer)
         );
-    } catch (error) {
-        console.error(error);
-        return handleResponse(res, 500, "Error in adding news details", error.message);
-    }
+        imageUrls = await Promise.all(uploadPromises);
+      }
+  
+      const data = {
+        name,
+        title,
+        description,
+        images: imageUrls,
+      };
+  
+      let newNews;
+      if (existingNews) {
 
-};
+        existingNews.set(data);
+        newNews = await existingNews.save();
+        req.event = newNews; 
+        next();
+  
+        return handleResponse(res, 200, "News updated successfully!", newNews);
+      } else {
+       
+        newNews = new News(data);
+        await newNews.save();
+        req.event = newNews; 
+        next();
+  
+        return handleResponse(res, 201, "News details added successfully!", newNews);
+      }
+    } catch (error) {
+      console.error(error);
+      return handleResponse(res, 500, "Error in adding or updating news details", error.message);
+    }
+  };
+  
 
 exports.getNewsData = async (req, res) => {
     try {
@@ -76,7 +92,7 @@ exports.getNewsDataById = async (req, res) => {
     }
 };
 
-exports.updateNewsData = async (req, res) => {
+exports.updateNewsData = async (req, res,next) => {
     const { id } = req.params;
     const { title, name, description } = req.body;
 
@@ -104,6 +120,8 @@ exports.updateNewsData = async (req, res) => {
         if (!updatedNews) {
             return handleResponse(res, 404, 'News data not found.');
         }
+        req.event=updatedNews;
+        next();
 
         return handleResponse(res, 200, 'Data updated successfully.', updatedNews);
     } catch (error) {

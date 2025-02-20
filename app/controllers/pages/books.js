@@ -3,13 +3,20 @@ const { Book } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
-exports.addBookDetails = async (req, res) => {
+exports.addBookDetails = async (req, res, next) => {
   try {
     const { title, name, description } = req.body;
 
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
+    }
+
+    const { id } = req.query.id ? req.query : req.body;
+
+    let existingBook = null;
+    if (id) {
+      existingBook = await Book.findById(id); 
     }
 
     let imageUrls = [];
@@ -27,13 +34,27 @@ exports.addBookDetails = async (req, res) => {
       images: imageUrls,
     };
 
-    const newBook = new Book(data);
-    await newBook.save();
+    let newBook;
+    if (existingBook) {
 
-    return handleResponse(res, 201, "Book Added successfully!", newBook);
+      existingBook.set(data);
+      newBook = await existingBook.save();
+      req.event = newBook; 
+      next();
+
+      return handleResponse(res, 200, "Book updated successfully!", newBook);
+    } else {
+      
+      newBook = new Book(data);
+      await newBook.save();
+      req.event = newBook; 
+      next();
+
+      return handleResponse(res, 201, "Book added successfully!", newBook);
+    }
   } catch (error) {
     console.error(error);
-    return handleResponse(res, 500, "Error creating Books", error.message);
+    return handleResponse(res, 500, "Error creating or updating book details", error.message);
   }
 };
 
@@ -66,12 +87,12 @@ exports.getBooksById = async (req, res) => {
   }
 };
 
-exports.updateBookDetails = async (req, res) => {
+exports.updateBookDetails = async (req, res, next) => {
 
   const { error } = validationSchema.validate(req.body);
-    if (error) {
-      return handleResponse(res, 400, error.details[0].message);
-    }
+  if (error) {
+    return handleResponse(res, 400, error.details[0].message);
+  }
 
   const { id } = req.params;
   const { title, name, description } = req.body;
@@ -100,7 +121,8 @@ exports.updateBookDetails = async (req, res) => {
     if (!updatedBook) {
       return handleResponse(res, 404, "Book not found.");
     }
-
+    req.event = updatedBook;
+    next();
     return handleResponse(res, 200, "Book details updated successfully.", updatedBook);
   } catch (error) {
     console.error(error);

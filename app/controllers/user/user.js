@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { userLoginSchema ,userRegistrationSchema} = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
-const { Users } = require('../../models');
+const { Users,Testimonials } = require('../../models');
+const cloudinary = require("../../middlewares/cloudinaryConfig");
 const{jwtAuthentication}=require("../../middlewares")
 
 
@@ -82,12 +83,14 @@ exports.me = async (req, res) => {
         }
     
         const user = await Users.findOne({ _id: req.user.user_id });
-        
+
         if (!user) {
             return handleResponse(res, 404, "User not found");
         }
-    
-        handleResponse(res, 200, "User details retrieved successfully!", { user });
+
+        user.password = undefined; 
+
+        handleResponse(res, 200, "User details retrieved successfully!", user);
     } catch (error) {
         console.error("Error retrieving user profile:", error);
         return handleResponse(res, 500, "Internal server error", error.message);
@@ -126,5 +129,122 @@ exports.updateUser = async (req, res) => {
     }
 };
 
+exports.testimonials = async (req, res) => {
+    try {
+        const { description } = req.body;
+        let imageUrls = [];
+        
+  
+        if (req.files && req.files.length > 0) {
+            const uploadPromises = req.files.map((file) =>
+                cloudinary.uploadImageToCloudinary(file.buffer) 
+            );
+            imageUrls = await Promise.all(uploadPromises);
+        }
+
+        const newTestimonials = new Testimonials({
+            description,
+            isview:false,
+            case_studies: imageUrls 
+        });
+
+ 
+        await newTestimonials.save();
+
+        // Return a success response
+        return handleResponse(res, 201, 'Testimonial details added successfully!', newTestimonials);
+
+    } catch (error) {
+        // Return error response if something goes wrong
+        console.error("Error retrieving user profile:", error);
+        return handleResponse(res, 500, "Internal server error", error.message);
+    }
+};
 
 
+exports.getTestimonials = async (req, res) => {
+    try {
+     
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+
+
+        const skip = (page - 1) * limit;
+
+     
+        const testimonials = await Testimonials.find()
+            .sort({ createdAt: -1 }) 
+            .skip(skip) 
+            .limit(limit); 
+
+
+        const totalTestimonials = await Testimonials.countDocuments();
+
+        
+        const totalPages = Math.ceil(totalTestimonials / limit);
+
+        if (testimonials.length === 0) {
+            return handleResponse(res, 404, 'No testimonials found.');
+        }
+
+      
+        return handleResponse(res, 200, 'Testimonials retrieved successfully', {
+            testimonials,
+            pagination: {
+                totalTestimonials,
+                totalPages,
+                currentPage: page,
+                perPage: limit,
+            },
+        });
+
+    } catch (error) {
+        console.error("Error retrieving testimonials:", error);
+        return handleResponse(res, 500, 'Internal server error', error.message);
+    }
+};
+
+
+
+
+exports.showTestimonials = async (req, res) => {
+    try {
+       
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+
+        const skip = (page - 1) * limit;
+
+    
+        const testimonials = await Testimonials.find({ isview: true })
+            .sort({ createdAt: -1 }) 
+            .skip(skip) 
+            .limit(limit); 
+
+        const totalTestimonials = await Testimonials.countDocuments({ isview: true });
+
+       
+        const totalPages = Math.ceil(totalTestimonials / limit);
+ 
+
+ 
+        if (testimonials.length === 0) {
+            return handleResponse(res, 404, 'No testimonials found.');
+        }
+
+        return handleResponse(res, 200, 'Testimonials retrieved successfully', {
+            testimonials,
+            pagination: {
+                totalTestimonials,
+                totalPages,
+                currentPage: page,
+                perPage: limit,
+            },
+        });
+
+    } catch (error) {
+        console.error("Error retrieving testimonials:", error);
+        return handleResponse(res, 500, 'Internal server error', error.message);
+    }
+};

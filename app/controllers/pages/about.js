@@ -3,15 +3,25 @@ const { Biography } = require('../../models');
 const { biographySchema } = require('../../vailidators/validaters');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
+
+
 exports.createBiography = async (req, res) => {
   try {
-    // const {title,name,biography,born_details,death_details,short_description,awards,achievements}=req.body;
+
     const { error } = biographySchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
     const { title, name, biography } = req.body;
+
+    const { id } = req.query.id ? req.query : req.body;
+
+    let existingBiography = null;
+    if (id) {
+      existingBiography = await Biography.findById(id);
+    }
+    
 
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
@@ -25,23 +35,27 @@ exports.createBiography = async (req, res) => {
       name,
       title,
       biography,
-      // born_details,
-      // death_details,
-      // short_description,
-      // awards,
-      // achievements,
-      image_urls: imageUrls,
+      images: imageUrls,
     };
 
-    const newBiography = new Biography(data);
-    await newBiography.save();
-
-    return handleResponse(res, 201, "Biography created successfully!", newBiography);
+    let newBiography;
+    if (existingBiography) {
+    
+      existingBiography.set(data);
+      newBiography = await existingBiography.save();
+      return handleResponse(res, 200, "Biography updated successfully!", newBiography);
+    } else {
+     
+      newBiography = new Biography(data);
+      await newBiography.save();
+      return handleResponse(res, 201, "Biography created successfully!", newBiography);
+    }
   } catch (error) {
     console.error(error);
-    return handleResponse(res, 500, "Error creating biography", error.message);
+    return handleResponse(res, 500, "Error creating or updating biography", error.message);
   }
 };
+
 
 exports.getBiographyData = async (req, res) => {
   try {
@@ -74,7 +88,7 @@ exports.getBiographyById = async (req, res) => {
 
 exports.updateBiography = async (req, res) => {
 
-  
+
   const { error } = biographySchema.validate(req.body);
   if (error) {
     return handleResponse(res, 400, error.details[0].message);
@@ -104,7 +118,7 @@ exports.updateBiography = async (req, res) => {
         // short_description,
         // awards,
         // achievements,
-        image_urls: imageUrls,
+        images: imageUrls,
       },
       { new: true }
     );
