@@ -5,39 +5,60 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 exports.createBanner = async (req, res) => {
     try {
-        const { error } = bannerSchema.validate(req.body);
-        if (error) {
-            return handleResponse(res, 400, error.details[0].message);
-        }
-
-        const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
-
-        let imageUrls = [];
-        if (req.files && req.files.length > 0) {
-            const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            imageUrls = await Promise.all(uploadPromises);
-        }
-
-        const newBanner = new Banner({
-            name,
-            heading,
-            beginning_date,
-            completion_date,
-            opening_date,
-            location,
-            image_urls: imageUrls
-        });
-
+      // Validate incoming request body
+      const { error } = bannerSchema.validate(req.body);
+      if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+      }
+  
+      const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
+  
+      // Get banner ID either from query or body
+      const { id } = req.query.id ? req.query : req.body;
+  
+      let existingBanner = null;
+      if (id) {
+        existingBanner = await Banner.findById(id); // Check if banner exists
+      }
+  
+      // Handle image upload
+      let imageUrls = [];
+      if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map((file) =>
+          cloudinary.uploadImageToCloudinary(file.buffer)
+        );
+        imageUrls = await Promise.all(uploadPromises);
+      }
+  
+      // Prepare data for saving
+      const data = {
+        name,
+        heading,
+        beginning_date,
+        completion_date,
+        opening_date,
+        location,
+        image_urls: imageUrls,
+      };
+  
+      let newBanner;
+      if (existingBanner) {
+        // If the banner already exists, update it
+        existingBanner.set(data);
+        newBanner = await existingBanner.save();
+        return handleResponse(res, 200, 'Banner updated successfully!', newBanner);
+      } else {
+        // If the banner doesn't exist, create a new one
+        newBanner = new Banner(data);
         await newBanner.save();
-
-        return handleResponse(res, 201, 'Banner details added successfully!', newBanner);
+        return handleResponse(res, 201, 'Banner created successfully!', newBanner);
+      }
     } catch (error) {
-        console.error(error);
-        return handleResponse(res, 500, 'Failed to add banner details.');
+      console.error(error);
+      return handleResponse(res, 500, 'Failed to create or update banner details.', error.message);
     }
-};
+  };
+  
 
 exports.getAllBanners = async (req, res) => {
     try {

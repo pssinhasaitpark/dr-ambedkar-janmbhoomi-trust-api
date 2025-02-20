@@ -70,8 +70,6 @@ exports.contactSchema=Joi.object({
     location:Joi.string().required()
 })
 exports.gallerySchema=Joi.object({
-  name: Joi.string().required(),
-  title: Joi.string().required(),
-  short_description: Joi.string().required(),
-  long_description: Joi.string().required()
+  gallery_info: Joi.string().required(),
+  gallery_description: Joi.string().required()
 })

@@ -4,7 +4,7 @@ const biographySchema = new mongoose.Schema({
   title: { type: String, required: true },
   name: { type: String, required: true },
   biography: { type: String, required: true },
-  image_urls: [String],
+  images: [String],
   // short_description: { type: String, required: true },
 // born_details: { type: String, required: true },
 // death_details: { type: String, required: true },

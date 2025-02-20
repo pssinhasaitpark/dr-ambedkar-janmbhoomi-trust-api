@@ -3,14 +3,21 @@ const { Donation } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
-exports.addDonationData = async (req, res) => {
+exports.addDonationData = async (req, res, next) => {
   try {
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
-    
+
     const { title, name, description } = req.body;
+
+    const { id } = req.query.id ? req.query : req.body;
+
+    let existingDonation = null;
+    if (id) {
+      existingDonation = await Donation.findById(id); 
+    }
 
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
@@ -27,13 +34,27 @@ exports.addDonationData = async (req, res) => {
       images: imageUrls,
     };
 
-    const newDonation = new Donation(data);
-    await newDonation.save();
+    let newDonation;
+    if (existingDonation) {
+ 
+      existingDonation.set(data);
+      newDonation = await existingDonation.save();
+      req.event = newDonation; 
+      next();
 
-    return handleResponse(res, 201, "Donation details added successfully!", newDonation);
+      return handleResponse(res, 200, "Donation details updated successfully!", newDonation);
+    } else {
+      
+      newDonation = new Donation(data);
+      await newDonation.save();
+      req.event = newDonation; 
+      next();
+
+      return handleResponse(res, 201, "Donation details added successfully!", newDonation);
+    }
   } catch (error) {
     console.error(error);
-    return handleResponse(res, 500, "Error in adding donation details", error.message);
+    return handleResponse(res, 500, "Error in adding or updating donation details", error.message);
   }
 };
 
@@ -67,8 +88,8 @@ exports.getDonationDataById = async (req, res) => {
   }
 };
 
-exports.updateDonationData = async (req, res) => {
-  
+exports.updateDonationData = async (req, res, next) => {
+
   const { error } = validationSchema.validate(req.body);
   if (error) {
     return handleResponse(res, 400, error.details[0].message);
@@ -101,6 +122,9 @@ exports.updateDonationData = async (req, res) => {
     if (!updatedDonation) {
       return handleResponse(res, 404, "Donation data not found.");
     }
+
+    req.event = updatedDonation;
+    next();
 
     return handleResponse(res, 200, "Data updated successfully.", updatedDonation);
   } catch (error) {

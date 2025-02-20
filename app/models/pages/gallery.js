@@ -1,11 +1,17 @@
 const mongoose = require("mongoose");
 
 const gallerySchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    name: { type: String, required: true },
-    short_description: { type: String, required: true },
-    long_description: { type: String, required: true },
-    images:[String]
+
+    gallery_info: {
+        type: String,
+    },
+    gallery_description: { type: String },
+    birthplace_media: [String],
+    events_media: [String],
+    exhibitions_media: [String],
+    online_media: [String],
+    birthplace_media_indexes:{type:Number}
+
 },
     {
         timestamps: true,
