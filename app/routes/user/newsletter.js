@@ -5,6 +5,7 @@ const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'
 
 
 
-router.post("/",upload,newsletter.subscribe)
+router.post("/",upload,convertImagesToWebP,newsletter.subscribe)
+router.get('/', newsletter.getAllSubscriptions);
 
 module.exports = router;

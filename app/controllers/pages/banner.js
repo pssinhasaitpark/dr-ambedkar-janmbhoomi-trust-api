@@ -3,9 +3,9 @@ const { bannerSchema } = require('../../vailidators/validaters');
 const { Banner } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
+
 exports.createBanner = async (req, res) => {
     try {
-      // Validate incoming request body
       const { error } = bannerSchema.validate(req.body);
       if (error) {
         return handleResponse(res, 400, error.details[0].message);
@@ -13,15 +13,13 @@ exports.createBanner = async (req, res) => {
   
       const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
   
-      // Get banner ID either from query or body
       const { id } = req.query.id ? req.query : req.body;
   
       let existingBanner = null;
       if (id) {
-        existingBanner = await Banner.findById(id); // Check if banner exists
+        existingBanner = await Banner.findById(id); 
       }
   
-      // Handle image upload
       let imageUrls = [];
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
@@ -30,7 +28,7 @@ exports.createBanner = async (req, res) => {
         imageUrls = await Promise.all(uploadPromises);
       }
   
-      // Prepare data for saving
+      
       const data = {
         name,
         heading,
@@ -43,12 +41,12 @@ exports.createBanner = async (req, res) => {
   
       let newBanner;
       if (existingBanner) {
-        // If the banner already exists, update it
+       
         existingBanner.set(data);
         newBanner = await existingBanner.save();
         return handleResponse(res, 200, 'Banner updated successfully!', newBanner);
       } else {
-        // If the banner doesn't exist, create a new one
+        
         newBanner = new Banner(data);
         await newBanner.save();
         return handleResponse(res, 201, 'Banner created successfully!', newBanner);
@@ -57,9 +55,8 @@ exports.createBanner = async (req, res) => {
       console.error(error);
       return handleResponse(res, 500, 'Failed to create or update banner details.', error.message);
     }
-  };
+};
   
-
 exports.getAllBanners = async (req, res) => {
     try {
         const banners = await Banner.find().sort({ createdAt: -1 });

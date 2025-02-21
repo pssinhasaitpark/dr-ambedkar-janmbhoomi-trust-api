@@ -16,7 +16,7 @@ exports.addDonationData = async (req, res, next) => {
 
     let existingDonation = null;
     if (id) {
-      existingDonation = await Donation.findById(id); 
+      existingDonation = await Donation.findById(id);
     }
 
     let imageUrls = [];
@@ -36,18 +36,18 @@ exports.addDonationData = async (req, res, next) => {
 
     let newDonation;
     if (existingDonation) {
- 
+
       existingDonation.set(data);
       newDonation = await existingDonation.save();
-      req.event = newDonation; 
+      req.event = newDonation;
       next();
 
       return handleResponse(res, 200, "Donation details updated successfully!", newDonation);
     } else {
-      
+
       newDonation = new Donation(data);
       await newDonation.save();
-      req.event = newDonation; 
+      req.event = newDonation;
       next();
 
       return handleResponse(res, 201, "Donation details added successfully!", newDonation);
@@ -57,6 +57,7 @@ exports.addDonationData = async (req, res, next) => {
     return handleResponse(res, 500, "Error in adding or updating donation details", error.message);
   }
 };
+
 
 exports.getDonationData = async (req, res) => {
   try {
