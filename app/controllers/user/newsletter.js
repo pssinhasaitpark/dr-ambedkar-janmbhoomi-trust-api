@@ -4,8 +4,7 @@ const { Newsletter } = require('../../models');
 exports.subscribe = async (req, res) => {
   try {
     const { email } = req.body;
-
-
+    
     const existingSubscription = await Newsletter.findOne({ email });
 
     if (existingSubscription) {

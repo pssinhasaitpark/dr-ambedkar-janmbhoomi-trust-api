@@ -6,7 +6,7 @@ const {sendEmailToSubscribers}= require('../../middlewares/sendemailTosubscriber
 
 
 
-router.post("/add",upload,convertImagesToWebP,biography.createBiography)
+router.post("/add",upload,convertImagesToWebP,biography.createBiography,sendEmailToSubscribers)
 router.get("",biography.getBiographyData)
 router.get("/get/:id",biography.getBiographyById);
 router.put("/update/:id",upload,convertImagesToWebP,biography.updateBiography,sendEmailToSubscribers)

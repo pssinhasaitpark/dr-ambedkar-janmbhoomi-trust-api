@@ -5,49 +5,68 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 exports.addBookDetails = async (req, res, next) => {
   try {
-    const { title, name, description } = req.body;
-
+  
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { id } = req.query.id ? req.query : req.body;
+    const { title, name, description } = req.body;  
+    const { id } = req.query.id ? req.query : req.body;  
 
     let existingBook = null;
     if (id) {
       existingBook = await Book.findById(id); 
     }
 
-    let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((file) =>
-        cloudinary.uploadImageToCloudinary(file.buffer)
-      );
-      imageUrls = await Promise.all(uploadPromises);
+ 
+    let removeImages = [];
+    if (req.body.removeImages) {
+      try {
+        removeImages = JSON.parse(req.body.removeImages);  
+      } catch (error) {
+        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+      }
     }
 
+    let imageUrls = existingBook ? [...existingBook.images] : [];  
+
+    
+    if (Array.isArray(removeImages)) {
+      imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+    }
+
+  
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map((file) =>
+        cloudinary.uploadImageToCloudinary(file.buffer)  
+      );
+      const newImageUrls = await Promise.all(uploadPromises);
+      imageUrls.push(...newImageUrls);  
+    }
+
+   
     const data = {
       name,
       title,
       description,
-      images: imageUrls,
+      images: imageUrls,  
     };
 
     let newBook;
     if (existingBook) {
-
+      
       existingBook.set(data);
       newBook = await existingBook.save();
-      req.event = newBook; 
+      req.event = newBook;  
       next();
 
       return handleResponse(res, 200, "Book updated successfully!", newBook);
     } else {
-      
+    
       newBook = new Book(data);
       await newBook.save();
-      req.event = newBook; 
+      req.event = newBook;  
       next();
 
       return handleResponse(res, 201, "Book added successfully!", newBook);
@@ -57,6 +76,8 @@ exports.addBookDetails = async (req, res, next) => {
     return handleResponse(res, 500, "Error creating or updating book details", error.message);
   }
 };
+
+
 
 exports.getBooksData = async (req, res) => {
   try {

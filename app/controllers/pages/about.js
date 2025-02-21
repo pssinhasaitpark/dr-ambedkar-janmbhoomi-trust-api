@@ -5,53 +5,79 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 
 
-exports.createBiography = async (req, res) => {
+exports.createBiography = async (req, res, next) => {
   try {
-
-    const { error } = biographySchema.validate(req.body);
-    if (error) {
-      return handleResponse(res, 400, error.details[0].message);
+    let removeImages = [];
+    if (req.body.removeImages) {
+      try {
+        removeImages = JSON.parse(req.body.removeImages); 
+      } catch (error) {
+        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+      }
     }
 
-    const { title, name, biography } = req.body;
-
-    const { id } = req.query.id ? req.query : req.body;
+    const { title, name, biography } = req.body;  
+    const { id } = req.query;  
 
     let existingBiography = null;
     if (id) {
       existingBiography = await Biography.findById(id);
+      if (!existingBiography) {
+        return handleResponse(res, 404, "Biography not found");
+      }
     }
 
-    let imageUrls = [];
+    let imageUrls = existingBiography ? [...existingBiography.images] : [];
+
+   
+    if (Array.isArray(removeImages)) {
+      imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+    }
+
+    
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file) =>
         cloudinary.uploadImageToCloudinary(file.buffer)
       );
-      imageUrls = await Promise.all(uploadPromises);
+      const newImageUrls = await Promise.all(uploadPromises);
+      imageUrls.push(...newImageUrls);
     }
 
-    const data = {
-      name,
-      title,
-      biography,
-      images: imageUrls,
-    };
-
-    let newBiography;
     if (existingBiography) {
-    
-      existingBiography.set(data);
-      newBiography = await existingBiography.save();
-      return handleResponse(res, 200, "Biography updated successfully!", newBiography);
+     
+      existingBiography.set({
+        title: title || existingBiography.title,
+        name: name || existingBiography.name,
+        biography: biography || existingBiography.biography,
+        images: imageUrls,  
+      });
+
+      await existingBiography.save();
+      return handleResponse(res, 200, "Biography updated successfully!", {
+        biography: existingBiography.toObject(),
+      });
     } else {
      
-      newBiography = new Biography(data);
+      const newBiography = new Biography({
+        title,
+        name,
+        biography,
+        images: imageUrls,
+      });
+
       await newBiography.save();
-      return handleResponse(res, 201, "Biography created successfully!", newBiography);
+
+      req.event = existingBiography;
+      next();
+
+      return handleResponse(res, 201, "Biography created successfully!", {
+        biography: newBiography.toObject(),
+      });
     }
   } catch (error) {
-    console.error(error);
-    return handleResponse(res, 500, "Error creating or updating biography", error.message);
+    return handleResponse(res, 500, "Error creating or updating biography", {
+      error: error.message,
+    });
   }
 };
 
