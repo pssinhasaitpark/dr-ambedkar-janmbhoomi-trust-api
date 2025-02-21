@@ -2,8 +2,6 @@ const { handleResponse } = require("../../utils/helper");
 const { Events } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
-const { sendNewPostEmail } = require('../../utils/emailHandler'); // Import the email handler
-const { Newsletter } = require('../../models'); // Import the Newsletter model for subscribed users
 
 
 
@@ -21,7 +19,7 @@ exports.addEvents = async (req, res, next) => {
 
     let existingEvent = null;
     if (id) {
-      existingEvent = await Events.findById(id); // Check if event exists
+      existingEvent = await Events.findById(id); 
     }
 
     let imageUrls = [];
@@ -137,47 +135,6 @@ exports.updateEvent = async (req, res, next) => {
   }
 };
 
-// exports.updateEvent = async (req, res) => {
-  
-//   const { error } = validationSchema.validate(req.body);
-//   if (error) {
-//     return handleResponse(res, 400, error.details[0].message);
-//   }
-
-//   const { id } = req.params;
-//   const { title, name, description } = req.body;
-
-//   try {
-//     let imageUrls = [];
-
-//     if (req.files && req.files.length > 0) {
-//       const uploadPromises = req.files.map((file) =>
-//         cloudinary.uploadImageToCloudinary(file.buffer)
-//       );
-//       imageUrls = await Promise.all(uploadPromises);
-//     }
-
-//     const updatedEvents = await Events.findByIdAndUpdate(
-//       id,
-//       {
-//         title,
-//         name,
-//         description,
-//         images: imageUrls,
-//       },
-//       { new: true }
-//     );
-
-//     if (!updatedEvents) {
-//       return handleResponse(res, 404, "Event not found.");
-//     }
-
-//     return handleResponse(res, 200, "Event updated successfully.", updatedEvents);
-//   } catch (error) {
-//     console.error(error);
-//     return handleResponse(res, 500, "Error updating events details", error.message);
-//   }
-// };
 
 exports.deleteEvent = async (req, res) => {
   try {

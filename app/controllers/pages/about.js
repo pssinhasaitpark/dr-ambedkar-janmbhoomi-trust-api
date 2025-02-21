@@ -21,7 +21,6 @@ exports.createBiography = async (req, res) => {
     if (id) {
       existingBiography = await Biography.findById(id);
     }
-    
 
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
@@ -55,7 +54,6 @@ exports.createBiography = async (req, res) => {
     return handleResponse(res, 500, "Error creating or updating biography", error.message);
   }
 };
-
 
 exports.getBiographyData = async (req, res) => {
   try {

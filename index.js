@@ -13,7 +13,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://192.168.0.117:3000",
-      "http://192.168.0.115:3000",
+      "http://192.168.0.121:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
       "https://admin-dr-ambedkar-janmbhoomi.netlify.app"
 

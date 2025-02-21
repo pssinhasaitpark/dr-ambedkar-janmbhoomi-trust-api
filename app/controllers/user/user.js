@@ -75,7 +75,6 @@ exports.loginUser = async (req, res, next) => {
     }
 };
 
-
 exports.me = async (req, res) => {
     try {
         if (!req.user || !req.user.user_id) {
@@ -96,7 +95,6 @@ exports.me = async (req, res) => {
         return handleResponse(res, 500, "Internal server error", error.message);
     }
 };
-
 
 exports.updateUser = async (req, res) => {
     const { user_name, first_name, last_name, email, mobile, password } = req.body;
@@ -203,9 +201,6 @@ exports.getTestimonials = async (req, res) => {
         return handleResponse(res, 500, 'Internal server error', error.message);
     }
 };
-
-
-
 
 exports.showTestimonials = async (req, res) => {
     try {
