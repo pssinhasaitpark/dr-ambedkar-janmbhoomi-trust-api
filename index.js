@@ -16,7 +16,6 @@ app.use(
       "http://192.168.0.121:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
       "https://admin-dr-ambedkar-janmbhoomi.netlify.app"
-
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,
