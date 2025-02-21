@@ -11,44 +11,60 @@ exports.addNewsData = async (req, res, next) => {
         return handleResponse(res, 400, error.details[0].message);
       }
   
-      const { title, name, description } = req.body;
-  
-      const { id } = req.query.id ? req.query : req.body;
+      const { title, name, description } = req.body; 
+      const { id } = req.query.id ? req.query : req.body;  
   
       let existingNews = null;
       if (id) {
-        existingNews = await News.findById(id); 
+        existingNews = await News.findById(id);  
       }
   
-      let imageUrls = [];
+      
+      let removeImages = [];
+      if (req.body.removeImages) {
+        try {
+          removeImages = JSON.parse(req.body.removeImages);  
+        } catch (error) {
+          return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+        }
+      }
+  
+      let imageUrls = existingNews ? [...existingNews.images] : [];  
+  
+      if (Array.isArray(removeImages)) {
+        imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+      }
+  
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
-          cloudinary.uploadImageToCloudinary(file.buffer)
+          cloudinary.uploadImageToCloudinary(file.buffer)  
         );
-        imageUrls = await Promise.all(uploadPromises);
+        const newImageUrls = await Promise.all(uploadPromises);
+        imageUrls.push(...newImageUrls);  
       }
   
+     
       const data = {
         name,
         title,
         description,
-        images: imageUrls,
+        images: imageUrls,  
       };
   
       let newNews;
       if (existingNews) {
-
+        
         existingNews.set(data);
         newNews = await existingNews.save();
-        req.event = newNews; 
+        req.event = newNews;  
         next();
   
         return handleResponse(res, 200, "News updated successfully!", newNews);
       } else {
-       
+
         newNews = new News(data);
         await newNews.save();
-        req.event = newNews; 
+        req.event = newNews;  
         next();
   
         return handleResponse(res, 201, "News details added successfully!", newNews);
@@ -59,6 +75,7 @@ exports.addNewsData = async (req, res, next) => {
     }
   };
   
+
 
 exports.getNewsData = async (req, res) => {
     try {

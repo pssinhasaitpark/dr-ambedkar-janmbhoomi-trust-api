@@ -3,51 +3,72 @@ const { Donation } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 
+
+
 exports.addDonationData = async (req, res, next) => {
   try {
+   
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { title, name, description } = req.body;
-
-    const { id } = req.query.id ? req.query : req.body;
+    const { title, name, description } = req.body;  
+    const { id } = req.query.id ? req.query : req.body;  
 
     let existingDonation = null;
     if (id) {
-      existingDonation = await Donation.findById(id);
+      existingDonation = await Donation.findById(id);  
     }
 
-    let imageUrls = [];
+   
+    let removeImages = [];
+    if (req.body.removeImages) {
+      try {
+        removeImages = JSON.parse(req.body.removeImages);  
+      } catch (error) {
+        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+      }
+    }
+
+    let imageUrls = existingDonation ? [...existingDonation.images] : [];  
+
+
+    if (Array.isArray(removeImages)) {
+      imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+    }
+
+   
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file) =>
-        cloudinary.uploadImageToCloudinary(file.buffer)
+        cloudinary.uploadImageToCloudinary(file.buffer)  
       );
-      imageUrls = await Promise.all(uploadPromises);
+      const newImageUrls = await Promise.all(uploadPromises);
+      imageUrls.push(...newImageUrls);  
     }
 
+  
     const data = {
       name,
       title,
       description,
-      images: imageUrls,
+      images: imageUrls,  
     };
 
     let newDonation;
     if (existingDonation) {
-
+    
       existingDonation.set(data);
       newDonation = await existingDonation.save();
-      req.event = newDonation;
+      req.event = newDonation;  
       next();
 
       return handleResponse(res, 200, "Donation details updated successfully!", newDonation);
     } else {
-
+      
       newDonation = new Donation(data);
       await newDonation.save();
-      req.event = newDonation;
+      req.event = newDonation;  
       next();
 
       return handleResponse(res, 201, "Donation details added successfully!", newDonation);
@@ -57,6 +78,9 @@ exports.addDonationData = async (req, res, next) => {
     return handleResponse(res, 500, "Error in adding or updating donation details", error.message);
   }
 };
+
+
+
 
 
 exports.getDonationData = async (req, res) => {

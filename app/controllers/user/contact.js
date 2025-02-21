@@ -3,6 +3,8 @@ const { contactSchema } = require('../../vailidators/validaters');
 const { Contact_us } = require('../../models');
 const mongoose = require('mongoose');
 
+
+
 exports.addContact = async (req, res) => {
     const { error } = contactSchema.validate(req.body);
     if (error) {
@@ -25,7 +27,7 @@ exports.addContact = async (req, res) => {
 
 exports.getContactDetails = async (req, res) => {
     try {
-        const contact_details = await Contact_us.find();
+        const contact_details = await Contact_us.find().sort({createdAt:-1});
         if (!contact_details || contact_details.length === 0) {
             return handleResponse(res, 404, 'No data available in the database');
         }

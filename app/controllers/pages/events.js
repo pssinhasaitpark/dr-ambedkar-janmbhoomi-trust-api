@@ -5,50 +5,69 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 
 
-
 exports.addEvents = async (req, res, next) => {
   try {
+   
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { title, name, description } = req.body;
-
-    const { id } = req.query.id ? req.query : req.body;
+    const { title, name, description } = req.body; 
+    const { id } = req.query.id ? req.query : req.body; 
 
     let existingEvent = null;
     if (id) {
       existingEvent = await Events.findById(id); 
     }
 
-    let imageUrls = [];
+  
+    let removeImages = [];
+    if (req.body.removeImages) {
+      try {
+        removeImages = JSON.parse(req.body.removeImages);  
+      } catch (error) {
+        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+      }
+    }
+
+    let imageUrls = existingEvent ? [...existingEvent.images] : [];
+
+    
+    if (Array.isArray(removeImages)) {
+      imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+    }
+
+   
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file) =>
-        cloudinary.uploadImageToCloudinary(file.buffer)
+        cloudinary.uploadImageToCloudinary(file.buffer)  
       );
-      imageUrls = await Promise.all(uploadPromises);
+      const newImageUrls = await Promise.all(uploadPromises);
+      imageUrls.push(...newImageUrls);  
     }
 
     const data = {
       name,
       title,
       description,
-      images: imageUrls,
+      images: imageUrls,  
     };
 
     let newEvent;
     if (existingEvent) {
+    
       existingEvent.set(data);
       newEvent = await existingEvent.save();
-      req.event = newEvent; 
+      req.event = newEvent;  
       next();
 
       return handleResponse(res, 200, "Event updated successfully!", newEvent);
     } else {
+     
       newEvent = new Events(data);
       await newEvent.save();
-      req.event = newEvent; 
+      req.event = newEvent;  
       next();
 
       return handleResponse(res, 201, "Event added successfully!", newEvent);
@@ -58,6 +77,8 @@ exports.addEvents = async (req, res, next) => {
     return handleResponse(res, 500, "Error in creating or updating an event", error.message);
   }
 };
+
+
 
 
 exports.getEventsData = async (req, res) => {
