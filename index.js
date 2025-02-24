@@ -23,8 +23,8 @@ app.use(
   })
 );
 
-
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json());
 
 const connectDB = require('./app/dbConfig/dbConfig');
@@ -41,6 +41,7 @@ app.get("/", (req, res) => {
     message: "Welcome to Dr Ambedkar Janmbhoomi trust",
   });
 });
+
 
 const port = process.env.PORT || 5050;
 

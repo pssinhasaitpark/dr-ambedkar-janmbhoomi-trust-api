@@ -5,7 +5,8 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 const mongoose = require('mongoose');
 
 
-exports.addGallery1 = async (req, res, next) => {
+
+exports.addGallery = async (req, res, next) => {
     try {
       const { error } = gallerySchema.validate(req.body);
       if (error) {
@@ -13,28 +14,33 @@ exports.addGallery1 = async (req, res, next) => {
       }
   
       const { gallery_info, gallery_description } = req.body;
-      
+      const { id } = req.query.id ? req.query : req.body;  // Get the ID from query or body
+  
+      let existingGallery = null;
+      if (id) {
+        existingGallery = await Gallery.findById(id);  // Check if gallery exists by ID
+      }
+  
       const birthplace_media = req.files['birthplace_media'] || [];
       const events_media = req.files['events_media'] || [];
       const exhibitions_media = req.files['exhibitions_media'] || [];
       const online_media = req.files['online_media'] || [];
   
-      let removeImages = {
-        birthplace: [],
-        events: [],
-        exhibitions: [],
-        online: []
-      };
-      
+      // Initialize removeImages as an empty array by default
+      let removeImages = [];
+  
+      // Check if removeImages is passed in the request body, and parse it
       if (req.body.removeImages) {
         try {
-          removeImages = JSON.parse(req.body.removeImages); 
+          removeImages = JSON.parse(req.body.removeImages);  // Parse the removeImages field
+          if (!Array.isArray(removeImages)) {
+            return handleResponse(res, 400, "removeImages must be an array of URLs.");
+          }
         } catch (error) {
           return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
         }
       }
   
-      
       const uploadImages = async (files) => {
         const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
         return await Promise.all(uploadPromises);
@@ -45,20 +51,26 @@ exports.addGallery1 = async (req, res, next) => {
       let exhibitionImages = await uploadImages(exhibitions_media);
       let onlineImages = await uploadImages(online_media);
   
-      if (Array.isArray(removeImages.birthplace)) {
-        birthplaceImages = birthplaceImages.filter(img => !removeImages.birthplace.includes(img));
-      }
+      // Merge old images with new ones while removing the selected images
+      const mergeImages = (existingImages, newImages, removeImagesList) => {
+        if (!Array.isArray(removeImagesList)) {
+          removeImagesList = [];
+        }
   
-      if (Array.isArray(removeImages.events)) {
-        eventImages = eventImages.filter(img => !removeImages.events.includes(img));
-      }
+        // Remove specific images by URL that the user wants to delete
+        let updatedImages = existingImages.filter(img => !removeImagesList.includes(img));
   
-      if (Array.isArray(removeImages.exhibitions)) {
-        exhibitionImages = exhibitionImages.filter(img => !removeImages.exhibitions.includes(img));
-      }
+        updatedImages.push(...newImages);
+        return updatedImages;
+      };
   
-      if (Array.isArray(removeImages.online)) {
-        onlineImages = onlineImages.filter(img => !removeImages.online.includes(img));
+      // If the gallery exists, merge old and new images
+      if (existingGallery) {
+        // Merge images for each category (birthplace, events, exhibitions, online)
+        birthplaceImages = mergeImages(existingGallery.birthplace_media, birthplaceImages, removeImages);
+        eventImages = mergeImages(existingGallery.events_media, eventImages, removeImages);
+        exhibitionImages = mergeImages(existingGallery.exhibitions_media, exhibitionImages, removeImages);
+        onlineImages = mergeImages(existingGallery.online_media, onlineImages, removeImages);
       }
   
       const data = {
@@ -70,71 +82,28 @@ exports.addGallery1 = async (req, res, next) => {
         online_media: onlineImages,
       };
   
-      const newData = new Gallery(data);
-      await newData.save();
-  
-      req.event = newData; 
-      next();
-  
-      return handleResponse(res, 201, "Gallery details added successfully!", newData);
+      let newGallery;
+      if (existingGallery) {
+        // If gallery exists, update the gallery with new data
+        existingGallery.set(data);
+        newGallery = await existingGallery.save();
+        req.event = newGallery; 
+        next();
+        return handleResponse(res, 200, "Gallery details updated successfully!", newGallery);
+      } else {
+        // If gallery does not exist, create a new one
+        newGallery = new Gallery(data);
+        await newGallery.save();
+        req.event = newGallery; 
+        next();
+        return handleResponse(res, 201, "Gallery details added successfully!", newGallery);
+      }
     } catch (error) {
       console.error(error);
-      return handleResponse(res, 500, "Error in adding gallery details", error.message);
-    }
-  };
-  
-
-exports.addGallery = async (req, res, next) => {
-    try {
-        const { error } = gallerySchema.validate(req.body);
-        if (error) {
-            return handleResponse(res, 400, error.details[0].message);
-        }
-    
-        
-        const { gallery_info, gallery_description } = req.body;
-        const birthplace_media = req.files['birthplace_media'] || [];
-        const events_media = req.files['events_media'] || [];
-        const exhibitions_media = req.files['exhibitions_media'] || [];
-        const online_media = req.files['online_media'] || [];
-
-        const uploadImages = async (files) => {
-            const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
-            return await Promise.all(uploadPromises);
-        };
-        const birthplaceImages = await uploadImages(birthplace_media);
-        const eventImages = await uploadImages(events_media);
-        const exhibitionImages = await uploadImages(exhibitions_media);
-        const onlineImages = await uploadImages(online_media);
-
-
-        const data = {
-            gallery_info,
-            gallery_description,
-            birthplace_media: birthplaceImages,
-            events_media: eventImages,
-            exhibitions_media: exhibitionImages,
-            online_media: onlineImages,
-        };
-
-      
-        const newData = new Gallery(data);
-        await newData.save();
-        
-
-        
-        req.event = newData;
-        next();
-
-       
-        return handleResponse(res, 201, "Gallery details added successfully!", newData);
-    } catch (error) {
-        console.error(error);
-        
-        return handleResponse(res, 500, "Error in adding gallery details", error.message);
+      return handleResponse(res, 500, "Error in adding or updating gallery details", error.message);
     }
 };
-
+  
 exports.getGalleryData = async (req, res) => {
     try {
         const data = await Gallery.find().sort({ createdAt: -1 });

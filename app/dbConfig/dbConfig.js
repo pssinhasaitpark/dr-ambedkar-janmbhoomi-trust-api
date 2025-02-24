@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+// const { connectGridFS } = require("../middlewares/gridfs");
 
 const dbURI = `${process.env.MONGODB_URI}`; 
     const connectDB = async () => {
@@ -13,4 +14,5 @@ const dbURI = `${process.env.MONGODB_URI}`;
         process.exit(1);
     }
 };
+
 module.exports = connectDB;
