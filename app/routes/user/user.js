@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {users}=require("../../controllers")
-const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'); 
+//const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'); 
 const { verifyUser,verifyRole} = require('../../middlewares/jwtAuth');
 
 
@@ -10,7 +10,7 @@ const { verifyUser,verifyRole} = require('../../middlewares/jwtAuth');
   router.get("/me",verifyUser,users.me);
   router.put("/update",verifyUser,users.updateUser);
   
-  router.post("/testimonials",upload,convertImagesToWebP,users.testimonials);
+  // router.post("/testimonials",upload,convertImagesToWebP,users.testimonials);
   router.get("/testimonials/show",users.showTestimonials);
   router.get("/testimonials",users.getTestimonials);
 

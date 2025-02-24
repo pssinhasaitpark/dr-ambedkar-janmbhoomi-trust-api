@@ -72,5 +72,6 @@ exports.contactSchema=Joi.object({
 })
 exports.gallerySchema=Joi.object({
   gallery_info: Joi.string().required(),
-  gallery_description: Joi.string().required()
+  gallery_description: Joi.string().required(),
+  removeImages:Joi.string().optional()
 })
