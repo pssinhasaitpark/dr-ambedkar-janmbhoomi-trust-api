@@ -22,6 +22,8 @@ exports.userRegistrationSchema = Joi.object({
     "string.min": "Password must be at least 8 characters long.",
     "string.empty": "Password cannot be empty.",
   }),
+  designations:Joi.string().min(2).required(),
+  user_role:Joi.string().required()
 });
 
 exports.userLoginSchema = Joi.object({
@@ -47,6 +49,14 @@ exports.biographySchema = Joi.object({
 exports.validationSchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
+  description: Joi.string().required(),
+  removeImages:Joi.string().optional()
+});
+
+
+exports.bookListingSchema = Joi.object({
+  author_name: Joi.string().required(),
+  book_title: Joi.string().required(),
   description: Joi.string().required(),
   removeImages:Joi.string().optional()
 });

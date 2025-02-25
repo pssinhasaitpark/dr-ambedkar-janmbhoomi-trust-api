@@ -1,3 +1,5 @@
+
+
 module.exports = {
     users: require('./user/user'),
     banner:require('./pages/banner'),
@@ -6,7 +8,8 @@ module.exports = {
     events:require('./pages/events'),
     donation:require('./pages/donation'),
     news:require("./pages/news"),
-    gallery:require("./pages/gallery"),
-    contact:require("./user/contact"),
-    newsletter:require('./user/newsletter')
+    gallery:require('./pages/gallery'),
+    contact:require('./user/contact'),
+    newsletter:require('./user/newsletter'),
+    book_listing:require('./pages/book_listing')
 }

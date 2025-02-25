@@ -1,42 +1,42 @@
-// const mongoose = require("mongoose");
-
-// const donationSchema = new mongoose.Schema({
-//   title: { type: String, required: true },
-//   name: { type: String, required: true },
-//   description: { type: String, required: true },
-//   images: [String],
-// },
-//   {
-//     timestamps: true,
-//   });
-
-// module.exports = mongoose.model("donation", donationSchema);
-
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const donationSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  // Remove the 'description' field as required and add a 'descriptionFileId' field
-  descriptionFileId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'GridFSFile',  // Reference to the GridFS file collection
-    required: false,  // Make it optional
-  },
-  images: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'GridFSFile',
-  }],
-});
+  title: { type: String, required: true },
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  images: [String],
+},
+  {
+    timestamps: true,
+  });
 
-module.exports = mongoose.model('Donation', donationSchema);
+module.exports = mongoose.model("donation", donationSchema);
+
+
+
+
+
+
+
+
+
+
+// const mongoose = require('mongoose');
+// const donationSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   title: { type: String, required: true },
+//   descriptionFileId: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: 'GridFSFile',  // Reference to GridFSFile
+//     required: false,  // Optional
+//   },
+//   images: [{
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: 'GridFSFile',  // Reference to GridFSFile
+//   }],
+// });
+
+// module.exports = mongoose.model('Donation', donationSchema);
 
 
 

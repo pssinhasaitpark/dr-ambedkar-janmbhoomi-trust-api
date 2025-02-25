@@ -7,14 +7,10 @@ const cloudinary = require("../../middlewares/cloudinaryConfig");
 
 exports.createBiography = async (req, res, next) => {
   try {
-    let removeImages = [];
-    if (req.body.removeImages) {
-      try {
-        removeImages = JSON.parse(req.body.removeImages); 
-      } catch (error) {
-        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
-      }
-    }
+       const { error } = biographySchema.validate(req.body);
+           if (error) {
+               return handleResponse(res, 400, error.details[0].message);
+           }
 
     const { title, name, biography } = req.body;  
     const { id } = req.query;  
@@ -23,10 +19,21 @@ exports.createBiography = async (req, res, next) => {
     if (id) {
       existingBiography = await Biography.findById(id);
       if (!existingBiography) {
-        return handleResponse(res, 404, "Biography not found");
+        return handleResponse(res, 404, "Biography not found with provided id");
       }
     }
 
+
+
+    let removeImages = [];
+    if (req.body.removeImages) {
+      try {
+        removeImages = JSON.parse(req.body.removeImages); 
+      } catch (error) {
+        return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
+      }
+    }
+   
     let imageUrls = existingBiography ? [...existingBiography.images] : [];
 
    
@@ -42,6 +49,7 @@ exports.createBiography = async (req, res, next) => {
       const newImageUrls = await Promise.all(uploadPromises);
       imageUrls.push(...newImageUrls);
     }
+    
 
     if (existingBiography) {
      
