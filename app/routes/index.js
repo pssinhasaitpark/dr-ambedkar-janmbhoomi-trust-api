@@ -8,6 +8,7 @@ const newsRoutes=require('../routes/pages/news')
 const contactRoutes=require("../routes/pages/contact")
 const galleryRoutes=require('../routes/pages/gallery');
 const newsletterRoutes=require('../routes/user/newsletter')
+const book_listingRoutes=require("../routes/book_listing")
 module.exports = (app) => {
     app.use("/api/user", userRoutes);
     app.use("/api/banner", bannerRoutes);
@@ -19,5 +20,6 @@ module.exports = (app) => {
     app.use("/api/contact",contactRoutes);
     app.use("/api/gallery",galleryRoutes);  
     app.use("/api/newsletter",newsletterRoutes);
+    app.use("/api/booklist",book_listingRoutes)
 
 };

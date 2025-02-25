@@ -1,16 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const {users}=require("../../controllers")
-//const { upload, convertImagesToWebP } = require('../../middlewares/fileUploader'); 
-const { verifyUser,verifyRole} = require('../../middlewares/jwtAuth');
+const { upload, convertImagesToWebP,convertSingleImageToWebP,uploadSingle } = require('../../middlewares/fileUploader'); 
+const { verifyToken,verifyRole,verifyAdmin} = require('../../middlewares/jwtAuth');
 
 
-  router.post("/register", users.registerUser);
+  router.post("/register",verifyToken,verifyAdmin,uploadSingle,convertSingleImageToWebP, users.registerUser);
+
   router.post("/login", users.loginUser, verifyRole);
-  router.get("/me",verifyUser,users.me);
-  router.put("/update",verifyUser,users.updateUser);
-  
-  // router.post("/testimonials",upload,convertImagesToWebP,users.testimonials);
+
+  router.get("/me",verifyToken,users.me);
+
+  router.put("/:id",verifyToken,verifyAdmin,uploadSingle,convertSingleImageToWebP,users.updateUser);
+
+  router.get("/trustee",verifyToken,verifyAdmin,users.getTrustees);
+
+  router.get("/",verifyToken,verifyAdmin,users.getAllUsers);
+
+  router.delete("/:id",verifyToken,verifyAdmin,users.deletUserbyId)
+
+
+
+
+
+
+
+
+  router.post("/testimonials",upload,convertImagesToWebP,users.testimonials);
   router.get("/testimonials/show",users.showTestimonials);
   router.get("/testimonials",users.getTestimonials);
 

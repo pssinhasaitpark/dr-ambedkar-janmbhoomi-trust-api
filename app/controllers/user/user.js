@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { userLoginSchema ,userRegistrationSchema} = require('../../vailidators/validaters');
+const { userLoginSchema, userRegistrationSchema } = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
-const { Users,Testimonials } = require('../../models');
+const { Users, Testimonials } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
-const{jwtAuthentication}=require("../../middlewares")
+const { jwtAuthentication } = require("../../middlewares")
+const mongoose = require('mongoose');
 
 
 exports.registerUser = async (req, res) => {
@@ -12,8 +13,8 @@ exports.registerUser = async (req, res) => {
         return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { user_name, first_name, last_name, email, mobile, password } = req.body;
-    
+    const { user_name, first_name, last_name, email, mobile, password, designations, user_role } = req.body;
+
     try {
         const existingUser = await Users.findOne({ $or: [{ user_name }, { email }] });
 
@@ -28,17 +29,28 @@ exports.registerUser = async (req, res) => {
             return handleResponse(res, 400, errorMessage.trim());
         }
 
-        const data = { user_name, first_name, last_name, email, mobile, password, user_role: "user" };
+        const data = { user_name, first_name, last_name, email, mobile, password, user_role, designations };
+
+        if (req.file) {
+            try {
+                const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+                data.profile_image = imageUrl;  
+            } catch (cloudinaryError) {
+                console.error('Error uploading image to Cloudinary:', cloudinaryError);
+                return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+            }
+        }
 
         const newUser = new Users(data);
         await newUser.save();
 
-        handleResponse(res, 201, 'User created successfully!', {newUser});
+        handleResponse(res, 201, 'User created successfully!', { newUser });
     } catch (error) {
         console.error(error);
         handleResponse(res, 500, error.message);
     }
 };
+
 
 exports.loginUser = async (req, res, next) => {
     const { error } = userLoginSchema.validate(req.body);
@@ -68,26 +80,27 @@ exports.loginUser = async (req, res, next) => {
             encryptedToken: encryptedToken
         };
 
-        next(); 
+        next();
 
     } catch (error) {
         return handleResponse(res, 500, 'An unexpected error occurred during login.', error.message);
     }
 };
 
+
 exports.me = async (req, res) => {
     try {
         if (!req.user || !req.user.user_id) {
             return handleResponse(res, 401, "Unauthorized user");
         }
-    
+
         const user = await Users.findOne({ _id: req.user.user_id });
 
         if (!user) {
             return handleResponse(res, 404, "User not found");
         }
 
-        user.password = undefined; 
+        user.password = undefined;
 
         handleResponse(res, 200, "User details retrieved successfully!", user);
     } catch (error) {
@@ -96,57 +109,133 @@ exports.me = async (req, res) => {
     }
 };
 
+
 exports.updateUser = async (req, res) => {
-    const { user_name, first_name, last_name, email, mobile, password } = req.body;
+    const { user_name, first_name, last_name, email, mobile, password, designations, user_role } = req.body;
+    const userId = req.params.id;  
 
     try {
-        const user = await Users.findById(req.user.user_id);
-        if (!user) {
+        const existingUser = await Users.findById(userId);
+
+        if (!existingUser) {
             return handleResponse(res, 404, 'User not found.');
         }
 
-        if (user_name) user.user_name = user_name;
-        if (first_name) user.first_name = first_name;
-        if (last_name) user.last_name = last_name;
-        if (email) user.email = email;
-        if (mobile) user.mobile = mobile;
-        if (password) user.password = password;
+        if (email && existingUser.email !== email) {
+            const emailConflict = await Users.findOne({ email });
+            if (emailConflict) {
+                return handleResponse(res, 400, 'Email is already registered.');
+            }
+        }
 
-        await user.save();
+        if (user_name && existingUser.user_name !== user_name) {
+            const userNameConflict = await Users.findOne({ user_name });
+            if (userNameConflict) {
+                return handleResponse(res, 400, 'Username is already taken.');
+            }
+        }
 
-        handleResponse(res, 200, 'User updated successfully!', {
-            user_name: user.user_name,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            email: user.email,
-            mobile: user.mobile,
-        });
+        const updatedData = {
+            user_name,
+            first_name,
+            last_name,
+            email,
+            mobile,
+            password,  
+            designations,
+            user_role
+        };
+
+        if (req.file) {
+            try {
+                const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+                updatedData.profile_image = imageUrl;  
+            } catch (cloudinaryError) {
+                console.error('Error uploading image to Cloudinary:', cloudinaryError);
+                return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+            }
+        }
+
+        const updatedUser = await Users.findByIdAndUpdate(userId, updatedData, { new: true });
+
+        handleResponse(res, 200, 'User updated successfully!', { updatedUser });
     } catch (error) {
         console.error(error);
-        handleResponse(res, 500, 'An error occurred while updating the user.', error.message);
+        handleResponse(res, 500, error.message);
     }
 };
+
+
+exports.getTrustees = async (req, res) => {
+    try {
+
+        const data = await Users.find({ user_role: 'trustee' });
+
+        if (!data || data.length === 0) {
+            return handleResponse(res, 404, "No trustees found in the database");
+        }
+
+        return handleResponse(res, 200, "Trustees fetched successfully!", data);
+    } catch (error) {
+        return handleResponse(res, 500, "Error fetching Trustees details", error.message);
+    }
+};
+
+exports.getAllUsers = async (req, res) => {
+    try {
+
+        const data = await Users.find({ user_role: 'user' });
+
+        if (!data || data.length === 0) {
+            return handleResponse(res, 404, "No User found in the database");
+        }
+
+        return handleResponse(res, 200, "User fetched successfully!", data);
+    } catch (error) {
+        return handleResponse(res, 500, "Error fetching User details", error.message);
+    }
+};
+
+exports.deletUserbyId = async (req, res) => {
+    try {
+
+            if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+                    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+                }
+        
+        const data = await Users.findByIdAndDelete(req.params.id);
+        if (!data) {
+            return handleResponse(res, 404, "User details not found");
+        }
+
+        return handleResponse(res, 200, "User  deleted successfully", data);
+    } catch (error) {
+        return handleResponse(res, 500, "Error deleting user ", error.message);
+    }
+};
+
+//testimlonials
 
 exports.testimonials = async (req, res) => {
     try {
         const { description } = req.body;
         let imageUrls = [];
-        
-  
+
+
         if (req.files && req.files.length > 0) {
             const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer) 
+                cloudinary.uploadImageToCloudinary(file.buffer)
             );
             imageUrls = await Promise.all(uploadPromises);
         }
 
         const newTestimonials = new Testimonials({
             description,
-            isview:false,
-            case_studies: imageUrls 
+            isview: false,
+            case_studies: imageUrls
         });
 
- 
+
         await newTestimonials.save();
 
         // Return a success response
@@ -158,34 +247,32 @@ exports.testimonials = async (req, res) => {
         return handleResponse(res, 500, "Internal server error", error.message);
     }
 };
-
-
 exports.getTestimonials = async (req, res) => {
     try {
-     
-        const page = parseInt(req.query.page) || 1; 
-        const limit = parseInt(req.query.limit) || 10; 
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
 
 
         const skip = (page - 1) * limit;
 
-     
+
         const testimonials = await Testimonials.find()
-            .sort({ createdAt: -1 }) 
-            .skip(skip) 
-            .limit(limit); 
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
 
         const totalTestimonials = await Testimonials.countDocuments();
 
-        
+
         const totalPages = Math.ceil(totalTestimonials / limit);
 
         if (testimonials.length === 0) {
             return handleResponse(res, 404, 'No testimonials found.');
         }
 
-      
+
         return handleResponse(res, 200, 'Testimonials retrieved successfully', {
             testimonials,
             pagination: {
@@ -201,29 +288,28 @@ exports.getTestimonials = async (req, res) => {
         return handleResponse(res, 500, 'Internal server error', error.message);
     }
 };
-
 exports.showTestimonials = async (req, res) => {
     try {
-       
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
 
 
         const skip = (page - 1) * limit;
 
-    
+
         const testimonials = await Testimonials.find({ isview: true })
-            .sort({ createdAt: -1 }) 
-            .skip(skip) 
-            .limit(limit); 
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         const totalTestimonials = await Testimonials.countDocuments({ isview: true });
 
-       
-        const totalPages = Math.ceil(totalTestimonials / limit);
- 
 
- 
+        const totalPages = Math.ceil(totalTestimonials / limit);
+
+
+
         if (testimonials.length === 0) {
             return handleResponse(res, 404, 'No testimonials found.');
         }

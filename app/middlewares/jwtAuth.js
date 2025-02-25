@@ -55,41 +55,69 @@ exports.decryptToken = (encryptedToken) => {
   decrypted += decipher.final('utf8');
   return decrypted;
 }
-
-exports.verifyUser = async (req, res, next) => {
-  // Try to extract token from Authorization header (Bearer token), custom token header, query parameter, or request body
+exports.verifyToken = async (req, res, next) => {
   let encryptedToken = req.headers.authorization
-                        ? req.headers.authorization.split(' ')[1] // Extract token from Bearer format
-                        : req.headers['x-auth-token'] || // Custom header for token
-                          req.query.q || // Query parameter
-                          req.body.token; // Request body
+                        ? req.headers.authorization.split(' ')[1] 
+                        : req.headers['x-auth-token'] || 
+                          req.query.q || 
+                          req.body.token; 
 
-  // If no token is provided, return an error
   if (!encryptedToken) {
     return handleResponse(res, 401, "No token provided");
   }
 
   try {
-    // Decrypt the token (if it's encrypted)
     const decryptedToken = exports.decryptToken(encryptedToken);
 
-    // Verify the decrypted token using JWT
     const decodedToken = JWT.verify(decryptedToken, process.env.ACCESS_TOKEN_SECRET);
 
-    // If token is invalid or expired
     if (!decodedToken) {
       return handleResponse(res, 401, "Invalid or expired token");
     }
 
-    // Attach the decoded user information to the request object
     req.user = decodedToken;
 
-    // Proceed to the next middleware or route handler
     next();
   } catch (err) {
-    // Handle errors, such as expired or invalid token
     return handleResponse(res, 401, "Invalid or expired token");
   }
+};
+
+// exports.verifyToken = async (req, res, next) => {
+ 
+//   let encryptedToken = req.headers.authorization
+//                         ? req.headers.authorization.split(' ')[1] 
+//                         : req.headers['x-auth-token'] || 
+//                           req.query.q || 
+//                           req.body.token; 
+
+//   if (!encryptedToken) {
+//     return handleResponse(res, 401, "No token provided");
+//   }
+
+//   try {
+//     const decryptedToken = exports.decryptToken(encryptedToken);
+
+//     const decodedToken = JWT.verify(decryptedToken, process.env.ACCESS_TOKEN_SECRET);
+
+//     if (!decodedToken) {
+//       return handleResponse(res, 401, "Invalid or expired token");
+//     }
+
+//     req.user = decodedToken;
+
+//     next();
+//   } catch (err) {
+//     return handleResponse(res, 401, "Invalid or expired token");
+//   }
+// };
+
+exports.verifyAdmin = (req, res, next) => {
+  const { user_role } = req.user;
+  if (user_role !== 'admin') {
+    return handleResponse(res, 403, "Access forbidden: Admins only");
+  }
+  next();
 };
 
 
@@ -141,3 +169,5 @@ exports.verifyRole = (req, res) => {
 
   return handleResponse(res, 200, responseMessage, { encryptedToken, user_role });
 };
+
+

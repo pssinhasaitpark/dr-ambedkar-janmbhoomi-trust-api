@@ -5,11 +5,6 @@ const biographySchema = new mongoose.Schema({
   name: { type: String, required: true },
   biography: { type: String, required: true },
   images: [String],
-  // short_description: { type: String, required: true },
-// born_details: { type: String, required: true },
-// death_details: { type: String, required: true },
-// awards: { type: String, required: true },
-// achievements: { type: String, required: true },
 },
 {
   timestamps: true,

@@ -9,6 +9,8 @@ const Contact_us=require('./user/contact.js')
 const Gallery=require('./pages/gallery.js')
 const Testimonials=require('./user/testimonials')
 const Newsletter=require('./user/newsletter')
+const GridFSFile=require('./pages/gridfs')
+const Booklisting=require('./pages/book_listing')
 module.exports = {
     Users,
     Banner,
@@ -20,5 +22,7 @@ module.exports = {
     Contact_us,
     Gallery,
     Testimonials,
-    Newsletter
+    Newsletter,
+    GridFSFile,
+    Booklisting
 }
