@@ -54,6 +54,15 @@ exports.validationSchema = Joi.object({
 });
 
 
+exports.donationCollectionSchema = Joi.object({
+  amount: Joi.number().required(),
+  full_name: Joi.string().required(),
+  email: Joi.string().required(),
+  phone:Joi.string().required()
+
+});
+
+
 exports.bookListingSchema = Joi.object({
   author_name: Joi.string().required(),
   book_title: Joi.string().required(),

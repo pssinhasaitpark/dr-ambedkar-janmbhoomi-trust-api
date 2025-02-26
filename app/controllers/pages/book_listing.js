@@ -12,19 +12,15 @@ exports.addBookDetails = async (req, res, next) => {
         }
         const { book_title, author_name, description } = req.body;
 
-        let imageUrls = [];
-        if (req.files && req.files.length > 0) {
-            const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            imageUrls = await Promise.all(uploadPromises);
-        }
+                const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+                
 
         const data = {
             book_title,
             author_name,
             description,
-            images: imageUrls
+            images:imageUrl
+         
         }
 
         const newBookDetails = new Booklisting(data);

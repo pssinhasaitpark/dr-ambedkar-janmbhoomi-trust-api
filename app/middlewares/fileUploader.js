@@ -29,9 +29,23 @@ const uploadMultiple = multer({
 ]);
 
 
+const uploadMultiple1 = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 },  
+  fileFilter,
+}).fields([
+  { name: "images", maxCount: 10 },
+  { name: "news_details.image", maxCount: 10 },
+]);
+
+
+
+
+
 const upload =  multer({
   limits: { fieldSize: 500 * 1024 * 1024 }
 }).array("images", 10);
+
 
 
 const convertImagesToWebPMultiple = async (req, res, next) => {
@@ -91,26 +105,25 @@ const convertImagesToWebP = async (req, res, next) => {
   }
 };
 
-// // Handle single image upload (not an array)
 const uploadSingle = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },  
   fileFilter
-}).single("image"); // Accept only one file with field name 'image'
+}).single("image"); 
 
-// Function to convert a single image to WebP
+
 const convertSingleImageToWebP = async (req, res, next) => {
   try {
     if (!req.file) {
-      return handleResponse(res, 400, "No file was uploaded.");
+      return next();
+      // return handleResponse(res, 400, "No file was uploaded.");
     }
 
-    // Process the uploaded single image
+
     const webpBuffer = await sharp(req.file.buffer)
       .webp()
       .toBuffer();
 
-    // Update the file with the converted WebP buffer and mime type
     req.file.buffer = webpBuffer;
     req.file.mimetype = "image/webp";
     req.file.originalname = path.parse(req.file.originalname).name + ".webp";
@@ -121,5 +134,5 @@ const convertSingleImageToWebP = async (req, res, next) => {
     next(err);
   }
 };
-
-module.exports = { upload, convertImagesToWebP ,uploadMultiple,convertImagesToWebPMultiple,uploadSingle,convertSingleImageToWebP};
+ 
+module.exports = { upload, convertImagesToWebP ,uploadMultiple,convertImagesToWebPMultiple,uploadSingle,convertSingleImageToWebP,uploadMultiple1};
