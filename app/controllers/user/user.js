@@ -5,6 +5,8 @@ const { Users, Testimonials } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 const { jwtAuthentication } = require("../../middlewares")
 const mongoose = require('mongoose');
+const bcrypt = require("bcrypt");
+
 
 
 exports.registerUser = async (req, res) => {
@@ -34,7 +36,7 @@ exports.registerUser = async (req, res) => {
         if (req.file) {
             try {
                 const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
-                data.profile_image = imageUrl;  
+                data.image = imageUrl;
             } catch (cloudinaryError) {
                 console.error('Error uploading image to Cloudinary:', cloudinaryError);
                 return handleResponse(res, 500, 'Error uploading image to Cloudinary');
@@ -44,7 +46,7 @@ exports.registerUser = async (req, res) => {
         const newUser = new Users(data);
         await newUser.save();
 
-        handleResponse(res, 201, 'User created successfully!', { newUser });
+        handleResponse(res, 201, 'User created successfully!', newUser);
     } catch (error) {
         console.error(error);
         handleResponse(res, 500, error.message);
@@ -111,8 +113,20 @@ exports.me = async (req, res) => {
 
 
 exports.updateUser = async (req, res) => {
+    const { error } = userRegistrationSchema.validate(req.body);
+    if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+    }
+
+
+
     const { user_name, first_name, last_name, email, mobile, password, designations, user_role } = req.body;
-    const userId = req.params.id;  
+    const userId = req.params.id;
+
+    const validRoles = ['user', 'admin', 'super-admin', 'trustees'];
+    if (user_role && !validRoles.includes(user_role)) {
+        return handleResponse(res, 400, 'Invalid user role provided.');
+    }
 
     try {
         const existingUser = await Users.findById(userId);
@@ -135,26 +149,32 @@ exports.updateUser = async (req, res) => {
             }
         }
 
+
+
+   
+        const hashPassword = await bcrypt.hash(password, 10);
+
         const updatedData = {
             user_name,
             first_name,
             last_name,
             email,
             mobile,
-            password,  
+            password: hashPassword,
             designations,
             user_role
         };
-
+        
         if (req.file) {
             try {
                 const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
-                updatedData.profile_image = imageUrl;  
+                updatedData.image = imageUrl;
             } catch (cloudinaryError) {
                 console.error('Error uploading image to Cloudinary:', cloudinaryError);
                 return handleResponse(res, 500, 'Error uploading image to Cloudinary');
             }
         }
+
 
         const updatedUser = await Users.findByIdAndUpdate(userId, updatedData, { new: true });
 
@@ -166,10 +186,75 @@ exports.updateUser = async (req, res) => {
 };
 
 
+// exports.updateUser = async (req, res) => {
+
+//     const { error } = userRegistrationSchema.validate(req.body);
+//     if (error) {
+//         return handleResponse(res, 400, error.details[0].message);
+//     }
+
+//     const { user_name, first_name, last_name, email, mobile, password, designations, user_role } = req.body;
+//     const userId = req.params.id;  
+
+//     try {
+//         const existingUser = await Users.findById(userId);
+
+//         if (!existingUser) {
+//             return handleResponse(res, 404, 'User not found.');
+//         }
+
+//         if (email && existingUser.email !== email) {
+//             const emailConflict = await Users.findOne({ email });
+//             if (emailConflict) {
+//                 return handleResponse(res, 400, 'Email is already registered.');
+//             }
+//         }
+
+//         if (user_name && existingUser.user_name !== user_name) {
+//             const userNameConflict = await Users.findOne({ user_name });
+//             if (userNameConflict) {
+//                 return handleResponse(res, 400, 'Username is already taken.');
+//             }
+//         }
+
+//      const hashPassword = await bcrypt.hash(password, 10);
+
+
+//         const updatedData = {
+//             user_name,
+//             first_name,
+//             last_name,
+//             email,
+//             mobile,
+//             password:hashPassword,
+//             designations,
+//             user_role
+//         };
+
+//         if (req.file) {
+//             try {
+//                 const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+//                 updatedData.profile_image = imageUrl;  
+//             } catch (cloudinaryError) {
+//                 console.error('Error uploading image to Cloudinary:', cloudinaryError);
+//                 return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+//             }
+//         }
+
+//         const updatedUser = await Users.findByIdAndUpdate(userId, updatedData, { new: true });
+
+//         handleResponse(res, 200, 'User updated successfully!', { updatedUser });
+//     } catch (error) {
+//         console.error(error);
+//         handleResponse(res, 500, error.message);
+//     }
+// };
+
+
 exports.getTrustees = async (req, res) => {
     try {
 
-        const data = await Users.find({ user_role: 'trustee' });
+        const data = await Users.find({ user_role: 'trustees' }).sort({ createdAt: -1 });
 
         if (!data || data.length === 0) {
             return handleResponse(res, 404, "No trustees found in the database");
@@ -199,10 +284,10 @@ exports.getAllUsers = async (req, res) => {
 exports.deletUserbyId = async (req, res) => {
     try {
 
-            if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-                    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
-                }
-        
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+        }
+
         const data = await Users.findByIdAndDelete(req.params.id);
         if (!data) {
             return handleResponse(res, 404, "User details not found");
@@ -247,6 +332,12 @@ exports.testimonials = async (req, res) => {
         return handleResponse(res, 500, "Internal server error", error.message);
     }
 };
+
+
+
+
+
+
 exports.getTestimonials = async (req, res) => {
     try {
 
