@@ -13,5 +13,6 @@ module.exports = {
     contact:require('./user/contact'),
     newsletter:require('./user/newsletter'),
     book_listing:require('./pages/book_listing'),
-    donation_collection:require('./pages/donation_collection')
+    donation_collection:require('./pages/donation_collection'),
+    event_listing:require('./pages/event_listing')
 }
