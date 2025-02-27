@@ -2,8 +2,7 @@ const Joi = require("joi");
 
 exports.userRegistrationSchema = Joi.object({
   user_name: Joi.string().max(50).required(),
-  first_name: Joi.string().max(50).required(),
-  last_name: Joi.string().max(50).required(),
+  full_name: Joi.string().max(50).required(),
   email: Joi.string()
     .email({ tlds: { allow: ["com", "net", "org"] } })
     .required()
@@ -53,6 +52,13 @@ exports.validationSchema = Joi.object({
   removeImages:Joi.string().optional()
 });
 
+exports.newsSchema = Joi.object({
+  latest_news: Joi.string().required(),
+  headline: Joi.string().required(),
+  description: Joi.string().required(),
+  removeImages:Joi.string().optional()
+});
+
 
 exports.donationCollectionSchema = Joi.object({
   amount: Joi.number().required(),
@@ -66,6 +72,14 @@ exports.donationCollectionSchema = Joi.object({
 exports.bookListingSchema = Joi.object({
   author_name: Joi.string().required(),
   book_title: Joi.string().required(),
+  description: Joi.string().required(),
+  removeImages:Joi.string().optional()
+});
+
+
+exports.eventListingSchema = Joi.object({
+  event_title: Joi.string().required(),
+  organized_by: Joi.string().required(),
   description: Joi.string().required(),
   removeImages:Joi.string().optional()
 });

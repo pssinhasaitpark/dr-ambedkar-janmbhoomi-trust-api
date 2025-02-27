@@ -4,7 +4,8 @@ const bookListingSchema = new mongoose.Schema({
   book_title: { type: String, required: true },
   author_name: { type: String, required: true },
   description: { type: String, required: true },
-  images: { type: String,},
+  cover_image: { type: String},
+  images:[String]
 },
   {
     timestamps: true,

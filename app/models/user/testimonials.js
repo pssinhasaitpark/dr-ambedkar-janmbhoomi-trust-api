@@ -8,6 +8,8 @@ const testimonialsSchema = new mongoose.Schema({
         required: true
     },
     case_studies: [String],
+    stories: [String],
+
     isview:{type:Boolean},
 },
 

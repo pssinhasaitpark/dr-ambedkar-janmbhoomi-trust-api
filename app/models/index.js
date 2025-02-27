@@ -12,6 +12,7 @@ const Newsletter=require('./user/newsletter')
 const GridFSFile=require('./pages/gridfs')
 const Booklisting=require('./pages/book_listing')
 const Donation_collection=require('./pages/donation_collection')
+const Eventlisting=require('./pages/event_lisinting')
 module.exports = {
     Users,
     Banner,
@@ -26,5 +27,6 @@ module.exports = {
     Newsletter,
     GridFSFile,
     Booklisting,
-    Donation_collection
+    Donation_collection,
+    Eventlisting
 }
