@@ -1,5 +1,4 @@
 
-
 const multer = require("multer");
 const path = require("path");
 const sharp = require("sharp");
@@ -34,6 +33,7 @@ const uploadMultiple = multer({
 const upload = multer({
   limits: { fieldSize: 500 * 1024 * 1024 }
 }).array("images", 10);
+
 
 const convertSingleImageToWebP = async (req, res, next) => {
   try {

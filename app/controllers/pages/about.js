@@ -173,7 +173,7 @@ exports.deleteBiography = async (req, res) => {
       return handleResponse(res, 404, "Biography not found");
     }
 
-    return handleResponse(res, 200, "Biography deleted successfully", {});
+    return handleResponse(res, 200, "Biography deleted successfully", {data});
   } catch (error) {
     return handleResponse(res, 500, "Error deleting biography data", error.message);
   }

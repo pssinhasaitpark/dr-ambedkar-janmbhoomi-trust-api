@@ -43,6 +43,7 @@ exports.biographySchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().required(),
   biography: Joi.string().required(),
+  removeImages:Joi.string().optional()
 });
 
 exports.validationSchema = Joi.object({

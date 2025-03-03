@@ -13,6 +13,8 @@ const GridFSFile=require('./pages/gridfs')
 const Booklisting=require('./pages/book_listing')
 const Donation_collection=require('./pages/donation_collection')
 const Eventlisting=require('./pages/event_lisinting')
+const SocialMedia=require('./user/social_media')
+
 module.exports = {
     Users,
     Banner,
@@ -28,5 +30,6 @@ module.exports = {
     GridFSFile,
     Booklisting,
     Donation_collection,
-    Eventlisting
+    Eventlisting,
+    SocialMedia
 }

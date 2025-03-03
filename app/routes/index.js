@@ -11,6 +11,7 @@ const newsletterRoutes=require('../routes/user/newsletter')
 const book_listingRoutes=require('../routes/book_listing')
 const donation_collectionRoutes=require('../routes/pages/donation_collection')
 const event_lisintingRoutes=require('../routes/pages/event_listing')
+const social_mediaRoutes=require('../routes/user/social_media')
 module.exports = (app) => {
     app.use("/api/user", userRoutes);
     app.use("/api/banner", bannerRoutes);
@@ -24,6 +25,7 @@ module.exports = (app) => {
     app.use("/api/newsletter",newsletterRoutes);
     app.use("/api/booklist",book_listingRoutes);
     app.use("/api/collection",donation_collectionRoutes);
-    app.use("/api/eventlist",event_lisintingRoutes)
+    app.use("/api/eventlist",event_lisintingRoutes);
+    app.use("/api/socialmedia",social_mediaRoutes);
 
 };
