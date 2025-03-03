@@ -8,10 +8,9 @@ exports.signAccessToken = (userId, user_role) => {
   return exports.generateToken(userId, user_role, process.env.ACCESS_TOKEN_SECRET); // Use exports.generateToken
 };
 
-exports.generateToken = (userId, user_role, secret, expiresIn = '10h') => {
+exports.generateToken = (userId, user_role, secret, expiresIn =process.env.EXPIREIN) => {
   return new Promise((resolve, reject) => {
     const payload = {
-      aud: "parkhya.in",
       user_id: userId,
       user_role: user_role,
     };

@@ -278,9 +278,6 @@ exports.testimonials = async (req, res) => {
 
 
 
-
-
-
 exports.getTestimonials = async (req, res) => {
     try {
 
@@ -322,44 +319,27 @@ exports.getTestimonials = async (req, res) => {
         return handleResponse(res, 500, 'Internal server error', error.message);
     }
 };
-exports.showTestimonials = async (req, res) => {
+
+
+
+exports.deleteTestimonials = async (req, res) => {
+    const { id } = req.params;
+
     try {
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-
-
-        const skip = (page - 1) * limit;
-
-
-        const testimonials = await Testimonials.find({ isview: true })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const totalTestimonials = await Testimonials.countDocuments({ isview: true });
-
-
-        const totalPages = Math.ceil(totalTestimonials / limit);
-
-
-
-        if (testimonials.length === 0) {
-            return handleResponse(res, 404, 'No testimonials found.');
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return handleResponse(res, 400, 'The provided ID is not valid. Please provide a valid Id.');
         }
 
-        return handleResponse(res, 200, 'Testimonials retrieved successfully', {
-            testimonials,
-            pagination: {
-                totalTestimonials,
-                totalPages,
-                currentPage: page,
-                perPage: limit,
-            },
-        });
+        const testimonial = await Testimonials.findByIdAndDelete(id);
+        if (!testimonial) {
+            return handleResponse(res, 404, "No Testimonials data  found to delete.");
+        }
 
+        return handleResponse(res, 200, "Testimonials data deleted successfully!",testimonial);
     } catch (error) {
-        console.error("Error retrieving testimonials:", error);
-        return handleResponse(res, 500, 'Internal server error', error.message);
+        console.error(error);
+        return handleResponse(res, 500, "An error occurred while deleting Testimonials data.");
     }
 };
+
+

@@ -25,8 +25,8 @@ const { verifyToken,verifyRole,verifyAdmin} = require('../../middlewares/jwtAuth
   
 
   router.post("/testimonials",uploadMultiple,convertImagesToWebPMultiple,users.testimonials);
-  router.get("/testimonials/show",users.showTestimonials);
   router.get("/testimonials",users.getTestimonials);
+  router.delete("/testimonials/:id",users.deleteTestimonials)
 
 
 
