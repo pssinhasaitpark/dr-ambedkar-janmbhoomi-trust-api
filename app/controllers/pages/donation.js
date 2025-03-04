@@ -13,12 +13,16 @@ exports.addDonationData = async (req, res, next) => {
     }
 
     const { title, name, description } = req.body;  
-    const { id } = req.query.id ? req.query : req.body;  
+    const { id } = req.query.id ? req.query : req.body;
+
+
+      
 
     let existingDonation = null;
     if (id) {
-      existingBook = await Donation.findById(id); 
+      existingDonation = await Donation.findById(id); 
     }
+
 
  
     let removeImages = [];
@@ -161,7 +165,7 @@ exports.deleteDonationData = async (req, res) => {
     if (!data) {
       return handleResponse(res, 404, "Data not found");
     }
-    return handleResponse(res, 200, "Donation details deleted successfully", {});
+    return handleResponse(res, 200, "Donation details deleted successfully", data);
   } catch (error) {
     return handleResponse(res, 500, "Error deleting Donation details", error.message);
   }

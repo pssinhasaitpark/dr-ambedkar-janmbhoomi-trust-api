@@ -4,7 +4,7 @@ const {contact}=require("../../controllers")
  const { upload } = require('../../middlewares/fileUploader'); 
 
 
- router.post("/",upload,contact.addContact)
+router.post("/",upload,contact.addContact)
 router.get("/",contact.getContactDetails);
 router.get("/get/:id",contact.getContactDetailsById);
 router.put("/:id",upload,contact.updateContactDetails)
