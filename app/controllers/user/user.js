@@ -252,9 +252,7 @@ exports.testimonials = async (req, res) => {
             );
             storiesUrls = await Promise.all(storiesUploadPromises);
         }
-        console.log("caseStudiesUrls====", caseStudiesUrls);
-        console.log("storiesUrls====", storiesUrls);
-        console.log("Description====", description);
+
 
 
 
@@ -282,7 +280,7 @@ exports.getTestimonials = async (req, res) => {
     try {
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 50;
 
 
         const skip = (page - 1) * limit;

@@ -158,7 +158,7 @@ exports.deleteBookDetails = async (req, res) => {
       return handleResponse(res, 404, "Book details not found");
     }
 
-    return handleResponse(res, 200, "Book details deleted successfully", {});
+    return handleResponse(res, 200, "Book details deleted successfully", {data});
   } catch (error) {
     return handleResponse(res, 500, "Error deleting Book details data", error.message);
   }
