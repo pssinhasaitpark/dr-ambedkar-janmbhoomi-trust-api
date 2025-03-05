@@ -2,41 +2,113 @@ const { handleResponse } = require("../../utils/helper");
 const { Donation_collection } = require("../../models");
 const { donationCollectionSchema } = require("../../vailidators/validaters");
 const mongoose = require('mongoose');
-
+const razorpayInstance = require('../../utils/razorpay');
 
 
 
 
 exports.collectDonation = async (req, res) => {
     try {
-
         const { error } = donationCollectionSchema.validate(req.body);
         if (error) {
             return handleResponse(res, 400, error.details[0].message);
         }
 
-        const { amount, full_name, email, phone, events } = req.body;
+        const { amount, full_name, email, phone } = req.body;
+        const orderOptions = {
+            amount: amount * 100,
+            currency: "INR",
+            receipt: `receipt_${new Date().getTime()}`,
+            payment_capture: 1,
+        };
+
+        const order = await razorpayInstance.orders.create(orderOptions);
+        console.log("order=====", order);
 
 
-        const data = {
+        if (!order) {
+            return handleResponse(res, 500, "Error creating Razorpay order");
+        }
+
+        const donationData = {
             amount,
             full_name,
             phone,
-            email
+            email,
+            orderId: order.id,
         };
 
+        const newDonation = new Donation_collection(donationData);
+        await newDonation.save();
+        console.log("newDonation====", newDonation);
 
-        newData = new Donation_collection(data);
-        await newData.save();
-
-        return handleResponse(res, 201, " Doantion succesfully added successfully!", newData);
-
+        return handleResponse(res, 201, "Donation created successfully. Payment pending",
+            donationData
+        );
     } catch (error) {
         console.error(error);
         return handleResponse(res, 500, "Error in adding donation", error.message);
     }
 };
 
+
+
+
+// exports.collectDonation = async (req, res) => {
+//     try {
+
+//         const { error } = donationCollectionSchema.validate(req.body);
+//         if (error) {
+//             return handleResponse(res, 400, error.details[0].message);
+//         }
+
+//         const { amount, full_name, email, phone, events } = req.body;
+
+
+//         const data = {
+//             amount,
+//             full_name,
+//             phone,
+//             email
+//         };
+
+
+//         newData = new Donation_collection(data);
+//         await newData.save();
+
+//         return handleResponse(res, 201, " Doantion succesfully added successfully!", newData);
+
+//     } catch (error) {
+//         console.error(error);
+//         return handleResponse(res, 500, "Error in adding donation", error.message);
+//     }
+// };
+
+
+
+
+exports.verifyPayment = async (req, res) => {
+    const { paymentId, orderId } = req.body;
+
+    try {
+
+        const payment = await razorpayInstance.payments.fetch(paymentId);
+        if (payment.order_id === orderId && payment.status === 'captured') {
+            const donation = await Donation_collection.findOne({ orderId: orderId });
+            if (donation) {
+                donation.paymentStatus = 'completed';
+                donation.paymentId = paymentId;
+                await donation.save();
+                return handleResponse(res, 200, "Payment verified and donation successful");
+            }
+        }
+
+        return handleResponse(res, 400, "Payment verification failed");
+    } catch (error) {
+        console.error(error);
+        return handleResponse(res, 500, "Error verifying payment", error.message);
+    }
+};
 
 exports.getCollectDonationData = async (req, res) => {
     try {
@@ -105,7 +177,6 @@ exports.updateDonationDetails = async (req, res) => {
         return handleResponse(res, 500, "Error updating Data details", error.message);
     }
 };
-
 
 exports.deleteDonationDetails = async (req, res) => {
     try {
