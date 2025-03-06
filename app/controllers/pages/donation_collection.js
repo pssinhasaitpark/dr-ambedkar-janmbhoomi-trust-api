@@ -3,8 +3,7 @@ const { Donation_collection } = require("../../models");
 const { donationCollectionSchema } = require("../../vailidators/validaters");
 const mongoose = require('mongoose');
 const razorpayInstance = require('../../utils/razorpay');
-
-
+const crypto = require('crypto');
 
 
 exports.collectDonation = async (req, res) => {
@@ -23,7 +22,7 @@ exports.collectDonation = async (req, res) => {
         };
 
         const order = await razorpayInstance.orders.create(orderOptions);
-        console.log("order=====", order);
+        // console.log("order=====", order);
 
 
         if (!order) {
@@ -40,7 +39,7 @@ exports.collectDonation = async (req, res) => {
 
         const newDonation = new Donation_collection(donationData);
         await newDonation.save();
-        console.log("newDonation====", newDonation);
+        // console.log("newDonation====", newDonation);
 
         return handleResponse(res, 201, "Donation created successfully. Payment pending",
             donationData
@@ -53,62 +52,53 @@ exports.collectDonation = async (req, res) => {
 
 
 
-
-// exports.collectDonation = async (req, res) => {
-//     try {
-
-//         const { error } = donationCollectionSchema.validate(req.body);
-//         if (error) {
-//             return handleResponse(res, 400, error.details[0].message);
-//         }
-
-//         const { amount, full_name, email, phone, events } = req.body;
-
-
-//         const data = {
-//             amount,
-//             full_name,
-//             phone,
-//             email
-//         };
-
-
-//         newData = new Donation_collection(data);
-//         await newData.save();
-
-//         return handleResponse(res, 201, " Doantion succesfully added successfully!", newData);
-
-//     } catch (error) {
-//         console.error(error);
-//         return handleResponse(res, 500, "Error in adding donation", error.message);
-//     }
-// };
-
-
-
-
 exports.verifyPayment = async (req, res) => {
-    const { paymentId, orderId } = req.body;
 
-    try {
+    const { paymentId, orderId, signatureId } = req.body;
 
-        const payment = await razorpayInstance.payments.fetch(paymentId);
-        if (payment.order_id === orderId && payment.status === 'captured') {
-            const donation = await Donation_collection.findOne({ orderId: orderId });
-            if (donation) {
-                donation.paymentStatus = 'completed';
-                donation.paymentId = paymentId;
-                await donation.save();
-                return handleResponse(res, 200, "Payment verified and donation successful");
+    const generatedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex');
+
+        console.log(" process.env.RAZORPAY_KEY_SECRET===", process.env.RAZORPAY_KEY_SECRET);
+        
+        console.log("generatedSignature===",generatedSignature);
+        console.log("signatureId====",signatureId);
+        console.log("paymentId===",paymentId);
+        console.log("orderId====",orderId)
+        
+        
+        
+        
+    if (generatedSignature === signatureId) {
+        try {
+            const payment = await razorpayInstance.payments.fetch(paymentId);
+
+            if (payment.status === 'captured' && payment.order_id === orderId) {
+                const donation = await Donation_collection.findOne({ orderId: orderId });
+
+                if (donation) {
+                    donation.paymentStatus = 'completed';
+                    donation.paymentId = paymentId;
+                    await donation.save();
+                    console.log("Payment verified and donation successful")
+                    return handleResponse(res, 200, "Payment verified and donation successful");
+                } else {
+                    return handleResponse(res, 404, "Donation not found for the provided orderId");
+                }
+            } else {
+                return handleResponse(res, 400, "Payment not captured or incorrect order ID");
             }
+        } catch (error) {
+            console.error('Error fetching payment details:', error);
+            return handleResponse(res, 500, "Error verifying payment", error.message);
         }
-
-        return handleResponse(res, 400, "Payment verification failed");
-    } catch (error) {
-        console.error(error);
-        return handleResponse(res, 500, "Error verifying payment", error.message);
+    } else {
+        return handleResponse(res, 400, "Signature mismatch");
     }
 };
+
 
 exports.getCollectDonationData = async (req, res) => {
     try {
@@ -195,3 +185,59 @@ exports.deleteDonationDetails = async (req, res) => {
         return handleResponse(res, 500, "Error deleting Donation details details", error.message);
     }
 };
+
+
+/*
+exports.collectDonation = async (req, res) => {
+    try {
+
+        const { error } = donationCollectionSchema.validate(req.body);
+        if (error) {
+            return handleResponse(res, 400, error.details[0].message);
+        }
+
+        const { amount, full_name, email, phone, events } = req.body;
+
+
+        const data = {
+            amount,
+            full_name,
+            phone,
+            email
+        };
+
+
+        newData = new Donation_collection(data);
+        await newData.save();
+
+        return handleResponse(res, 201, " Doantion succesfully added successfully!", newData);
+
+    } catch (error) {
+        console.error(error);
+        return handleResponse(res, 500, "Error in adding donation", error.message);
+    }
+};
+*/
+
+// exports.verifyPayment = async (req, res) => {
+//     const { paymentId, orderId } = req.body;
+
+//     try {
+
+//         const payment = await razorpayInstance.payments.fetch(paymentId);
+//         if (payment.order_id === orderId && payment.status === 'captured') {
+//             const donation = await Donation_collection.findOne({ orderId: orderId });
+//             if (donation) {
+//                 donation.paymentStatus = 'completed';
+//                 donation.paymentId = paymentId;
+//                 await donation.save();
+//                 return handleResponse(res, 200, "Payment verified and donation successful");
+//             }
+//         }
+
+//         return handleResponse(res, 400, "Payment verification failed");
+//     } catch (error) {
+//         console.error(error);
+//         return handleResponse(res, 500, "Error verifying payment", error.message);
+//     }
+// };
