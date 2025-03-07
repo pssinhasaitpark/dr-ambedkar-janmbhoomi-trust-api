@@ -10,8 +10,6 @@ router.post("/",upload,convertImagesToWebP,news.addNewsData,sendEmailToSubscribe
 router.get("/",news.getNewsData);
 router.get("/get/:id",news.getNewsDataById);
 router.put("/:id",upload,convertImagesToWebP,news.updateNewsData,sendEmailToSubscribers)
-// router.put("/:newsId/details/:detailId",uploadMultiple1,convertImagesToWebPMultiple,news.updateNewsData,sendEmailToSubscribers)
-
 router.delete("/:id",news.deleteNewsData)
 
 module.exports = router;

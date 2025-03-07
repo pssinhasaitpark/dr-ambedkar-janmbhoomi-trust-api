@@ -25,6 +25,15 @@ exports.userRegistrationSchema = Joi.object({
   user_role:Joi.string().required()
 });
 
+exports.forgatePasswordSchema=Joi.object({
+  email:Joi.string().required()
+})
+
+exports.resetSchema=Joi.object({
+  newPassword:Joi.string().required(),
+  confirmPassword:Joi.string().required()
+})
+
 exports.userLoginSchema = Joi.object({
   email: Joi.string().email().max(50).required(),
   password: Joi.string().min(8).required(),
