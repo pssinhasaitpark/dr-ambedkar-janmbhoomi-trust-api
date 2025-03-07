@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken');
-const { userLoginSchema, userRegistrationSchema } = require('../../vailidators/validaters');
+const { userLoginSchema, userRegistrationSchema, forgatePasswordSchema, resetSchema } = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
 const { Users, Testimonials } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
 const { jwtAuthentication } = require("../../middlewares")
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
-
+const { sendResetEmail } = require("../../utils/emailHandler");
+const JWT = require("jsonwebtoken");
 
 
 exports.registerUser = async (req, res) => {
@@ -229,7 +230,75 @@ exports.deletUserbyId = async (req, res) => {
 };
 
 
-//testimlonials
+exports.forgatePassword = async (req, res) => {
+    try {
+        const { error } = forgatePasswordSchema.validate(req.body);
+        if (error) {
+            return handleResponse(res, 400, error.details[0].message);
+        }
+
+        const { email } = req.body;
+
+        const user = await Users.findOne({ email });
+
+        if (!user) {
+            return handleResponse(res, 404, "User is not registered");
+        }
+
+        const resetToken = await jwtAuthentication.signResetToken(email);
+        const encryptedToken = jwtAuthentication.encryptToken(resetToken);
+
+        await sendResetEmail(user.email, encryptedToken);
+
+        return handleResponse(res, 200, "Password reset email sent successfully", { token: encryptedToken });
+    } catch (error) {
+        console.error(error);
+        return handleResponse(res, 400, error.message || "An error occurred during the password reset process");
+    }
+};
+
+
+exports.resetPassword = async (req, res) => {
+    const { newPassword, confirmPassword } = req.body;
+
+
+    const { email } = req.user;
+
+    const { error } = resetSchema.validate(req.body);
+    if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+    }
+
+    try {
+        if (newPassword !== confirmPassword) {
+            return handleResponse(res, 400, 'Passwords do not match');
+        }
+
+        const user = await Users.findOne({ email: email });
+
+
+        if (!user) {
+            return handleResponse(res, 404, 'User not found');
+        }
+
+
+        if (user.resetTokenExpiry && user.resetTokenExpiry < new Date()) {
+            return handleResponse(res, 400, 'Reset token has expired');
+        }
+
+
+        user.password = newPassword;
+        user.resetTokenExpiry = null;
+        await user.save();
+
+        return handleResponse(res, 200, 'Password has been successfully reset');
+    } catch (err) {
+        console.error('Error resetting password:', err);
+        return handleResponse(res, 400, err.message || 'An error occurred during the password reset process');
+    }
+};
+
+
 
 
 exports.testimonials = async (req, res) => {
@@ -333,7 +402,7 @@ exports.deleteTestimonials = async (req, res) => {
             return handleResponse(res, 404, "No Testimonials data  found to delete.");
         }
 
-        return handleResponse(res, 200, "Testimonials data deleted successfully!",testimonial);
+        return handleResponse(res, 200, "Testimonials data deleted successfully!", testimonial);
     } catch (error) {
         console.error(error);
         return handleResponse(res, 500, "An error occurred while deleting Testimonials data.");

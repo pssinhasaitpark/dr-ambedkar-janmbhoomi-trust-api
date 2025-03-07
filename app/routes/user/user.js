@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const {users}=require("../../controllers")
-const { uploadSingle,convertImagesToWebPMultiple, uploadMultiple} = require('../../middlewares/fileUploader'); 
-const { verifyToken,verifyRole,verifyAdmin} = require('../../middlewares/jwtAuth');
+const { uploadSingle,convertImagesToWebPMultiple, uploadMultiple,convertSingleImageToWebP} = require('../../middlewares/fileUploader'); 
+const { verifyToken,verifyRole,verifyAdmin,verifyResetToken} = require('../../middlewares/jwtAuth');
 
 
-  router.post("/register",verifyToken,verifyAdmin,uploadSingle, users.registerUser);
+  router.post("/register",verifyToken,verifyAdmin,uploadSingle, convertSingleImageToWebP,users.registerUser);
 
   router.post("/login", users.loginUser, verifyRole);
 
@@ -18,6 +18,10 @@ const { verifyToken,verifyRole,verifyAdmin} = require('../../middlewares/jwtAuth
   router.get("/",verifyToken,verifyAdmin,users.getAllUsers);
 
   router.delete("/:id",verifyToken,verifyAdmin,users.deletUserbyId)
+
+  router.post("/forgate", users.forgatePassword);
+
+  router.post("/reset-password", verifyResetToken,users.resetPassword);
 
 
 
