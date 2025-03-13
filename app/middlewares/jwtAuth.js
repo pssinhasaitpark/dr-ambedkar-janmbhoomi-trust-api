@@ -5,7 +5,7 @@ const { handleResponse } = require('../utils/helper');
 
 
 exports.signAccessToken = (userId, user_role) => {
-  return exports.generateToken(userId, user_role, process.env.ACCESS_TOKEN_SECRET); 
+  return exports.generateToken(userId, user_role, process.env.ACCESS_TOKEN_SECRET);
 };
 
 exports.generateToken = (userId, user_role, secret, expiresIn = process.env.EXPIREIN) => {
@@ -85,7 +85,6 @@ exports.verifyToken = async (req, res, next) => {
 };
 
 
-
 exports.verifyResetToken = async (req, res, next) => {
   let encryptedToken = req.headers.authorization
     ? req.headers.authorization.split(' ')[1]
@@ -119,10 +118,10 @@ exports.verifyResetToken = async (req, res, next) => {
 exports.verifyToken = async (req, res, next) => {
 
   let encryptedToken = req.headers.authorization
-                        ? req.headers.authorization.split(' ')[1] 
-                        : req.headers['x-auth-token'] || 
-                          req.query.q || 
-                          req.body.token; 
+    ? req.headers.authorization.split(' ')[1]
+    : req.headers['x-auth-token'] ||
+    req.query.q ||
+    req.body.token;
 
   if (!encryptedToken) {
     return handleResponse(res, 401, "No token provided");
@@ -145,6 +144,7 @@ exports.verifyToken = async (req, res, next) => {
   }
 };
 
+
 exports.verifyAdmin = (req, res, next) => {
   const { user_role } = req.user;
   if (user_role !== 'admin') {
@@ -154,37 +154,6 @@ exports.verifyAdmin = (req, res, next) => {
 };
 
 
-// exports.verifyUser = async (req, res, next) => {
-//   // Try to extract token from Authorization header (Bearer token), query parameter, or request body
-//   let encryptedToken = req.headers.authorization 
-//                         ? req.headers.authorization.split(' ')[1] // Extract token from Bearer format
-//                         : req.query.q || req.body.token ||req.headers.authorization;
-
-//   if (!encryptedToken) {
-//     return handleResponse(res, 401, "No token provided");
-//   }
-
-//   try {
-//     // Decrypt the token (if it's encrypted)
-//     const decryptedToken = exports.decryptToken(encryptedToken);
-
-//     // Verify the decrypted token using JWT
-//     const decodedToken = JWT.verify(decryptedToken, process.env.ACCESS_TOKEN_SECRET);
-
-//     if (!decodedToken) {
-//       return handleResponse(res, 401, "Invalid or expired token");
-//     }
-
-//     // Attach the decoded user information to the request object
-//     req.user = decodedToken;
-
-//     // Proceed to the next middleware or route handler
-//     next();
-//   } catch (err) {
-//     // Handle errors, such as expired or invalid token
-//     return handleResponse(res, 401, "Invalid or expired token");
-//   }
-// };
 
 exports.verifyRole = (req, res) => {
   const { user_role, encryptedToken } = req.user;

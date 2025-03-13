@@ -69,7 +69,6 @@ exports.newsSchema = Joi.object({
   removeImages:Joi.string().optional()
 });
 
-
 exports.donationCollectionSchema = Joi.object({
   amount: Joi.number().required(),
   full_name: Joi.string().required(),
@@ -78,14 +77,12 @@ exports.donationCollectionSchema = Joi.object({
 
 });
 
-
 exports.bookListingSchema = Joi.object({
   author_name: Joi.string().required(),
   book_title: Joi.string().required(),
   description: Joi.string().required(),
   removeImages:Joi.string().optional()
 });
-
 
 exports.eventListingSchema = Joi.object({
   event_title: Joi.string().required(),

@@ -58,7 +58,6 @@ const convertSingleImageToWebP = async (req, res, next) => {
   }
 };
 
-
 const convertImagesToWebPMultiple = async (req, res, next) => {
   try {
 
@@ -124,7 +123,6 @@ const uploadSingle = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter
 }).single("image");
-
 
 
 module.exports = {upload, convertImagesToWebP, uploadMultiple, convertImagesToWebPMultiple, uploadSingle, convertSingleImageToWebP };

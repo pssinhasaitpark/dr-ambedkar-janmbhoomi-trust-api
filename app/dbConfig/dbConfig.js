@@ -1,12 +1,11 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-// const { connectGridFS } = require("../middlewares/gridfs");
 
 const dbURI = `${process.env.MONGODB_URI}`; 
     const connectDB = async () => {
     try {
         await mongoose.connect(dbURI, {
-            serverSelectionTimeoutMS: 10000, // Adjust timeout as needed
+            serverSelectionTimeoutMS: 10000, 
         });
         console.log('✅ MongoDB connected...');
     } catch (error) {

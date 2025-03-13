@@ -78,27 +78,6 @@ exports.getSocialMedia = async (req, res) => {
     }
 };
 
-
-// exports.getSocialMediaById = async (req, res) => {
-//     const { id } = req.params;
-//     try {
-//         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-//             return handleResponse(res, 400, 'The provided ID is not valid. Please provide a valid Id.');
-//         }
-
-//         const social_media = await SocialMedia.findById(id);
-//         if (!social_media) {
-//             return handleResponse(res, 404, `Social media details found for ID: ${id}`);
-//         }
-
-//         return handleResponse(res, 200, 'Social Media detail retrieved successfully.', contact_details);
-//     } catch (error) {
-//         console.error(error);
-//         return handleResponse(res, 500, 'Failed to retrieve Scoail media details.');
-//     }
-// };
-
-
 exports.deleteSocialMedia = async (req, res) => {
     const { id } = req.params;
 
