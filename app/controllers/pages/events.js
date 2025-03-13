@@ -78,9 +78,6 @@ exports.addEvents = async (req, res, next) => {
   }
 };
 
-
-
-
 exports.getEventsData = async (req, res) => {
   try {
     const data = await Events.find().sort({ createdAt: -1 });

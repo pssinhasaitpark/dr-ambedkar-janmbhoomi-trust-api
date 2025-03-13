@@ -36,7 +36,8 @@ const userSchema = new mongoose.Schema({
     },
     image:{
         type:String
-    }
+    },
+    isUsed: { type: Boolean }
 },
     {
         timestamps: true,

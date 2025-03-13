@@ -9,7 +9,6 @@ const Contact_us=require('./user/contact.js')
 const Gallery=require('./pages/gallery.js')
 const Testimonials=require('./user/testimonials')
 const Newsletter=require('./user/newsletter')
-const GridFSFile=require('./pages/gridfs')
 const Booklisting=require('./pages/book_listing')
 const Donation_collection=require('./pages/donation_collection')
 const Eventlisting=require('./pages/event_lisinting')
@@ -27,7 +26,6 @@ module.exports = {
     Gallery,
     Testimonials,
     Newsletter,
-    GridFSFile,
     Booklisting,
     Donation_collection,
     Eventlisting,

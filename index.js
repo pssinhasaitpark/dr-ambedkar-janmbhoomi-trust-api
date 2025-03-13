@@ -45,11 +45,6 @@ app.get("/", (req, res) => {
 
 const port = process.env.PORT || 5050;
 
-
-// app.listen(port,  () =>
-//   console.log(`App is listening at port:http://localhost:${port}`)
-// );
-
-app.listen(port,host,  () =>
+app.listen(port, host, () =>
   console.log(`App is listening at port:http://${host}:${port}`)
 );

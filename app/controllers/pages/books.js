@@ -77,8 +77,6 @@ exports.addBookDetails = async (req, res, next) => {
   }
 };
 
-
-
 exports.getBooksData = async (req, res) => {
   try {
     const data = await Book.find().sort({ createdAt: -1 });

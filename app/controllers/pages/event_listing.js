@@ -17,9 +17,6 @@ exports.addWEventDetails = async (req, res, next) => {
           const uploadPromises = req.files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
           imageUrls = await Promise.all(uploadPromises);
         }
-        // console.log("req.files===",req.files);
-        
-
         const data = {
             event_title,
             organized_by,

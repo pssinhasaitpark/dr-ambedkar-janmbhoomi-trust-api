@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken');
 const { userLoginSchema, userRegistrationSchema, forgatePasswordSchema, resetSchema } = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
 const { Users, Testimonials } = require('../../models');
@@ -7,7 +6,6 @@ const { jwtAuthentication } = require("../../middlewares")
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const { sendResetEmail } = require("../../utils/emailHandler");
-const JWT = require("jsonwebtoken");
 
 
 exports.registerUser = async (req, res) => {
@@ -54,7 +52,6 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-
 exports.loginUser = async (req, res, next) => {
     const { error } = userLoginSchema.validate(req.body);
     if (error) return handleResponse(res, 400, error.details[0].message);
@@ -89,7 +86,6 @@ exports.loginUser = async (req, res, next) => {
         return handleResponse(res, 500, 'An unexpected error occurred during login.', error.message);
     }
 };
-
 
 exports.me = async (req, res) => {
     try {
@@ -229,7 +225,6 @@ exports.deletUserbyId = async (req, res) => {
     }
 };
 
-
 exports.forgatePassword = async (req, res) => {
     try {
         const { error } = forgatePasswordSchema.validate(req.body);
@@ -248,6 +243,8 @@ exports.forgatePassword = async (req, res) => {
         const resetToken = await jwtAuthentication.signResetToken(email);
         const encryptedToken = jwtAuthentication.encryptToken(resetToken);
 
+        user.isUsed = false;
+        await user.save();
         await sendResetEmail(user.email, encryptedToken);
 
         return handleResponse(res, 200, "Password reset email sent successfully", { token: encryptedToken });
@@ -256,7 +253,6 @@ exports.forgatePassword = async (req, res) => {
         return handleResponse(res, 400, error.message || "An error occurred during the password reset process");
     }
 };
-
 
 exports.resetPassword = async (req, res) => {
     const { newPassword, confirmPassword } = req.body;
@@ -270,6 +266,11 @@ exports.resetPassword = async (req, res) => {
     }
 
     try {
+
+        if (user.isUsed === true) {
+            return handleResponse(res, 400, 'Reset token has expired');
+        }
+
         if (newPassword !== confirmPassword) {
             return handleResponse(res, 400, 'Passwords do not match');
         }
@@ -281,14 +282,8 @@ exports.resetPassword = async (req, res) => {
             return handleResponse(res, 404, 'User not found');
         }
 
-
-        if (user.resetTokenExpiry && user.resetTokenExpiry < new Date()) {
-            return handleResponse(res, 400, 'Reset token has expired');
-        }
-
-
         user.password = newPassword;
-        user.resetTokenExpiry = null;
+        user.isUsed = true;
         await user.save();
 
         return handleResponse(res, 200, 'Password has been successfully reset');
@@ -297,9 +292,6 @@ exports.resetPassword = async (req, res) => {
         return handleResponse(res, 400, err.message || 'An error occurred during the password reset process');
     }
 };
-
-
-
 
 exports.testimonials = async (req, res) => {
     try {
@@ -343,8 +335,6 @@ exports.testimonials = async (req, res) => {
     }
 };
 
-
-
 exports.getTestimonials = async (req, res) => {
     try {
 
@@ -386,8 +376,6 @@ exports.getTestimonials = async (req, res) => {
         return handleResponse(res, 500, 'Internal server error', error.message);
     }
 };
-
-
 
 exports.deleteTestimonials = async (req, res) => {
     const { id } = req.params;
