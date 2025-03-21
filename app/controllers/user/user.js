@@ -6,6 +6,8 @@ const { jwtAuthentication } = require("../../middlewares")
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const { sendResetEmail } = require("../../utils/emailHandler");
+const path = require('path');
+
 
 
 exports.registerUser = async (req, res) => {
@@ -29,18 +31,22 @@ exports.registerUser = async (req, res) => {
             }
             return handleResponse(res, 400, errorMessage.trim());
         }
-
+        
         const data = { user_name, full_name, email, mobile, password, user_role, designations };
 
-        if (req.file) {
-            try {
-                const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
-                data.image = imageUrl;
-            } catch (cloudinaryError) {
-                console.error('Error uploading image to Cloudinary:', cloudinaryError);
-                return handleResponse(res, 500, 'Error uploading image to Cloudinary');
-            }
-        }
+        const imageUrl = req.convertedFiles.image[0];
+        data.image = imageUrl;
+
+
+        // if (req.file) {
+        //     try {
+        //         const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+        //         data.image = imageUrl;
+        //     } catch (cloudinaryError) {
+        //         console.error('Error uploading image to Cloudinary:', cloudinaryError);
+        //         return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+        //     }
+        // }
 
         const newUser = new Users(data);
         await newUser.save();
@@ -157,15 +163,26 @@ exports.updateUser = async (req, res) => {
             user_role
         };
 
-        if (req.file) {
-            try {
-                const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
-                updatedData.image = imageUrl;
-            } catch (cloudinaryError) {
-                console.error('Error uploading image to Cloudinary:', cloudinaryError);
-                return handleResponse(res, 500, 'Error uploading image to Cloudinary');
-            }
-        }
+        // const file = req.file;
+        // if (!file) {
+        //     return handleResponse(res, 400, 'Image is required.');
+        // }
+        // const imageUrl = req.convertedFiles.image[0] || existingUser.image;
+        // updatedData.image = imageUrl;
+
+          // Check if an image is provided
+          const imageUrl = (req.convertedFiles && req.convertedFiles.image && req.convertedFiles.image[0]) || existingUser.image;
+          updatedData.image = imageUrl;
+
+        // if (req.file) {
+        //     try {
+        //         const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+        //         updatedData.image = imageUrl;
+        //     } catch (cloudinaryError) {
+        //         console.error('Error uploading image to Cloudinary:', cloudinaryError);
+        //         return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+        //     }
+        // }
 
 
         const updatedUser = await Users.findByIdAndUpdate(userId, updatedData, { new: true });
@@ -297,26 +314,30 @@ exports.testimonials = async (req, res) => {
     try {
         const { description } = req.body;
 
+        // if (req.files && req.files.case_studies && req.files.case_studies.length > 0) {
+        //     const caseStudyUploadPromises = req.files.case_studies.map((file) =>
+        //         cloudinary.uploadImageToCloudinary(file.buffer)
+        //     );
+        //     caseStudiesUrls = await Promise.all(caseStudyUploadPromises);
+        // }
+
+        // if (req.files && req.files.stories && req.files.stories.length > 0) {
+        //     const storiesUploadPromises = req.files.stories.map((file) =>
+        //         cloudinary.uploadImageToCloudinary(file.buffer)
+        //     );
+        //     storiesUrls = await Promise.all(storiesUploadPromises);
+        // }
+
         let caseStudiesUrls = [];
         let storiesUrls = [];
 
-        if (req.files && req.files.case_studies && req.files.case_studies.length > 0) {
-            const caseStudyUploadPromises = req.files.case_studies.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            caseStudiesUrls = await Promise.all(caseStudyUploadPromises);
+        if (req.convertedFiles && req.convertedFiles.case_studies) {
+            caseStudiesUrls = req.convertedFiles.case_studies;
         }
 
-        if (req.files && req.files.stories && req.files.stories.length > 0) {
-            const storiesUploadPromises = req.files.stories.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            storiesUrls = await Promise.all(storiesUploadPromises);
+        if (req.convertedFiles && req.convertedFiles.stories) {
+            storiesUrls = req.convertedFiles.stories;
         }
-
-
-
-
 
         const newTestimonials = new Testimonials({
             description,

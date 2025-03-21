@@ -37,15 +37,22 @@ exports.addNewsData = async (req, res, next) => {
         imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
       }
   
-      if (req.files && req.files.length > 0) {
-        const uploadPromises = req.files.map((file) =>
-          cloudinary.uploadImageToCloudinary(file.buffer)  
-        );
-        const newImageUrls = await Promise.all(uploadPromises);
-        imageUrls.push(...newImageUrls);  
-      }
+      // if (req.files && req.files.length > 0) {
+      //   const uploadPromises = req.files.map((file) =>
+      //     cloudinary.uploadImageToCloudinary(file.buffer)  
+      //   );
+      //   const newImageUrls = await Promise.all(uploadPromises);
+      //   imageUrls.push(...newImageUrls);  
+      // }
+      
   
      
+
+    if (req.convertedFiles && req.convertedFiles.images) {
+      imageUrls = [...imageUrls, ...req.convertedFiles.images];
+    }
+
+
       const data = {
         latest_news,
         headline,
@@ -135,14 +142,18 @@ exports.updateNewsData = async (req, res, next) => {
               imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
             }
         
-            if (req.files && req.files.length > 0) {
-              const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)  
-              );
-              const newImageUrls = await Promise.all(uploadPromises);
-              imageUrls.push(...newImageUrls);  
-            }
+            // if (req.files && req.files.length > 0) {
+            //   const uploadPromises = req.files.map((file) =>
+            //     cloudinary.uploadImageToCloudinary(file.buffer)  
+            //   );
+            //   const newImageUrls = await Promise.all(uploadPromises);
+            //   imageUrls.push(...newImageUrls);  
+            // }
    
+            if (req.convertedFiles && req.convertedFiles.images) {
+              imageUrls = [...imageUrls, ...req.convertedFiles.images];
+            }
+        
 
         const updatedNews = await News.findByIdAndUpdate(
             id,

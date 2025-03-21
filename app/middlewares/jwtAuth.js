@@ -70,7 +70,9 @@ exports.verifyToken = async (req, res, next) => {
   try {
     const decryptedToken = exports.decryptToken(encryptedToken);
 
+
     const decodedToken = JWT.verify(decryptedToken, process.env.ACCESS_TOKEN_SECRET);
+
 
     if (!decodedToken) {
       return handleResponse(res, 401, "Invalid or expired token");
@@ -83,7 +85,6 @@ exports.verifyToken = async (req, res, next) => {
     return handleResponse(res, 401, "Invalid or expired token");
   }
 };
-
 
 exports.verifyResetToken = async (req, res, next) => {
   let encryptedToken = req.headers.authorization
@@ -114,37 +115,6 @@ exports.verifyResetToken = async (req, res, next) => {
   }
 };
 
-
-exports.verifyToken = async (req, res, next) => {
-
-  let encryptedToken = req.headers.authorization
-    ? req.headers.authorization.split(' ')[1]
-    : req.headers['x-auth-token'] ||
-    req.query.q ||
-    req.body.token;
-
-  if (!encryptedToken) {
-    return handleResponse(res, 401, "No token provided");
-  }
-
-  try {
-    const decryptedToken = exports.decryptToken(encryptedToken);
-
-    const decodedToken = JWT.verify(decryptedToken, process.env.ACCESS_TOKEN_SECRET);
-
-    if (!decodedToken) {
-      return handleResponse(res, 401, "Invalid or expired token");
-    }
-
-    req.user = decodedToken;
-
-    next();
-  } catch (err) {
-    return handleResponse(res, 401, "Invalid or expired token");
-  }
-};
-
-
 exports.verifyAdmin = (req, res, next) => {
   const { user_role } = req.user;
   if (user_role !== 'admin') {
@@ -152,8 +122,6 @@ exports.verifyAdmin = (req, res, next) => {
   }
   next();
 };
-
-
 
 exports.verifyRole = (req, res) => {
   const { user_role, encryptedToken } = req.user;
@@ -171,5 +139,3 @@ exports.verifyRole = (req, res) => {
 
   return handleResponse(res, 200, responseMessage, { encryptedToken, user_role });
 };
-
-

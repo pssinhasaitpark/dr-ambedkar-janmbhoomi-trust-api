@@ -1,5 +1,3 @@
-
-
 module.exports = {
     users: require('./user/user'),
     banner:require('./pages/banner'),

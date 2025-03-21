@@ -37,13 +37,17 @@ exports.addBookDetails = async (req, res, next) => {
     }
 
   
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((file) =>
-        cloudinary.uploadImageToCloudinary(file.buffer)  
-      );
-      const newImageUrls = await Promise.all(uploadPromises);
-      imageUrls.push(...newImageUrls);  
-    }
+    // if (req.files && req.files.length > 0) {
+    //   const uploadPromises = req.files.map((file) =>
+    //     cloudinary.uploadImageToCloudinary(file.buffer)  
+    //   );
+    //   const newImageUrls = await Promise.all(uploadPromises);
+    //   imageUrls.push(...newImageUrls);  
+    // }
+
+    if (req.convertedFiles && req.convertedFiles.images) {
+      imageUrls = [...imageUrls, ...req.convertedFiles.images];
+  }
 
    
     const data = {
@@ -119,13 +123,16 @@ exports.updateBookDetails = async (req, res, next) => {
   try {
     let imageUrls = [];
 
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((file) =>
-        cloudinary.uploadImageToCloudinary(file.buffer)
-      );
-      imageUrls = await Promise.all(uploadPromises);
-    }
-
+    // if (req.files && req.files.length > 0) {
+    //   const uploadPromises = req.files.map((file) =>
+    //     cloudinary.uploadImageToCloudinary(file.buffer)
+    //   );
+    //   imageUrls = await Promise.all(uploadPromises);
+    // }
+    
+    if (req.convertedFiles && req.convertedFiles.images) {
+      imageUrls = [...imageUrls, ...req.convertedFiles.images];
+  }
     const updatedBook = await Book.findByIdAndUpdate(
       id,
       {

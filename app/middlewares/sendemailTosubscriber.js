@@ -10,6 +10,7 @@ exports.sendEmailToSubscribers = async (req, res, next) => {
     
     await sendNewPostEmail(emails, event.title);
     
+    
     next();
   } catch (error) {
     console.error("Error sending email:", error);
