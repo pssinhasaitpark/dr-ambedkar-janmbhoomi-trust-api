@@ -12,19 +12,23 @@ exports.addBookDetails = async (req, res, next) => {
         const { book_title, author_name, description } = req.body;
 
 
-        let coverImageUrl = null;
+        // let coverImageUrl = null;
 
-        if (req.files && req.files.cover_image) {
-            coverImageUrl = await cloudinary.uploadImageToCloudinary(req.files.cover_image[0].buffer); 
-        } else {
-            return handleResponse(res, 400, "Cover image is required");
-        }
-
+        // if (req.files && req.files.cover_image) {
+        //     coverImageUrl = await cloudinary.uploadImageToCloudinary(req.files.cover_image[0].buffer); 
+        // } else {
+        //     return handleResponse(res, 400, "Cover image is required");
+        // }
+        const coverImageUrl = req.convertedFiles.cover_image[0];
 
         let imageUrls = [];
-        if (req.files && req.files.images && req.files.images.length > 0) {
-            const uploadPromises = req.files.images.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
-            imageUrls = await Promise.all(uploadPromises);
+        // if (req.files && req.files.images && req.files.images.length > 0) {
+        //     const uploadPromises = req.files.images.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
+        //     imageUrls = await Promise.all(uploadPromises);
+        // }
+
+        if (req.convertedFiles && req.convertedFiles.images) {
+            imageUrls = [...imageUrls, ...req.convertedFiles.images];
         }
 
         const data = {
@@ -106,17 +110,26 @@ exports.updateBookDetails = async (req, res, next) => {
             imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
         }
 
-        let coverImageUrl = existingBook.cover_image;
-        if (req.files && req.files.cover_image) {
-            coverImageUrl = await cloudinary.uploadImageToCloudinary(req.files.cover_image[0].buffer);
-        }
+        // let coverImageUrl = existingBook.cover_image;
+        // if (req.files && req.files.cover_image) {
+        //     coverImageUrl = await cloudinary.uploadImageToCloudinary(req.files.cover_image[0].buffer);
+        // }
 
-        if (req.files && req.files.images && req.files.images.length > 0) {
-            const uploadPromises = req.files.images.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            const newImageUrls = await Promise.all(uploadPromises);
-            imageUrls.push(...newImageUrls);
+
+        // if (req.files && req.files.images && req.files.images.length > 0) {
+        //     const uploadPromises = req.files.images.map((file) =>
+        //         cloudinary.uploadImageToCloudinary(file.buffer)
+        //     );
+        //     const newImageUrls = await Promise.all(uploadPromises);
+        //     imageUrls.push(...newImageUrls);
+        // }
+
+        // const coverImageUrl = req.convertedFiles.cover_image[0];
+
+        const coverImageUrl = (req.convertedFiles && req.convertedFiles.cover_image && req.convertedFiles.cover_image[0]) || existingBook.cover_image;
+          
+        if (req.convertedFiles && req.convertedFiles.images) {
+            imageUrls = [...imageUrls, ...req.convertedFiles.images];
         }
 
         const updatedBook = await Booklisting.findByIdAndUpdate(

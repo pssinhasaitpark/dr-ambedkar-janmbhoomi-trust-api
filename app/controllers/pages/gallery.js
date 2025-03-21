@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 
 
 
-
 exports.addGallery = async (req, res, next) => {
     try {
         const { error } = gallerySchema.validate(req.body);
@@ -23,10 +22,16 @@ exports.addGallery = async (req, res, next) => {
 
 
 
-        const birthplace_media = req.files['birthplace_media'] || [];
-        const events_media = req.files['events_media'] || [];
-        const exhibitions_media = req.files['exhibitions_media'] || [];
-        const online_media = req.files['online_media'] || [];
+        // const birthplace_media = req.files['birthplace_media'] || [];
+        // const events_media = req.files['events_media'] || [];
+        // const exhibitions_media = req.files['exhibitions_media'] || [];
+        // const online_media = req.files['online_media'] || [];
+        
+        let birthplace_media = req.convertedFiles['birthplace_media'] || [];
+        let events_media = req.convertedFiles['events_media'] || [];
+        let exhibitions_media = req.convertedFiles['exhibitions_media'] || [];
+        let online_media = req.convertedFiles['online_media'] || [];
+
 
         let removeImages = [];
 
@@ -41,15 +46,15 @@ exports.addGallery = async (req, res, next) => {
             }
         }
 
-        const uploadImages = async (files) => {
-            const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
-            return await Promise.all(uploadPromises);
-        };
+        // const uploadImages = async (files) => {
+        //     const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
+        //     return await Promise.all(uploadPromises);
+        // };
 
-        let birthplaceImages = await uploadImages(birthplace_media);
-        let eventImages = await uploadImages(events_media);
-        let exhibitionImages = await uploadImages(exhibitions_media);
-        let onlineImages = await uploadImages(online_media);
+        // let birthplaceImages = await uploadImages(birthplace_media);
+        // let eventImages = await uploadImages(events_media);
+        // let exhibitionImages = await uploadImages(exhibitions_media);
+        // let onlineImages = await uploadImages(online_media);
 
 
 
@@ -69,10 +74,10 @@ exports.addGallery = async (req, res, next) => {
         
 
         if (existingGallery) {
-            birthplaceImages = mergeImages(existingGallery.birthplace_media, birthplaceImages, removeImages);
-            eventImages = mergeImages(existingGallery.events_media, eventImages, removeImages);
-            exhibitionImages = mergeImages(existingGallery.exhibitions_media, exhibitionImages, removeImages);
-            onlineImages = mergeImages(existingGallery.online_media, onlineImages, removeImages);
+            birthplaceImages = mergeImages(existingGallery.birthplace_media, birthplace_media, removeImages);
+            eventImages = mergeImages(existingGallery.events_media, events_media, removeImages);
+            exhibitionImages = mergeImages(existingGallery.exhibitions_media, exhibitions_media, removeImages);
+            onlineImages = mergeImages(existingGallery.online_media, online_media, removeImages);
         }
 
 
@@ -156,43 +161,45 @@ exports.updateGalleryData = async (req, res, next) => {
             return handleResponse(res, 404, 'Gallery data not found.');
         }
 
-        const birthplace_media = req.files['birthplace_media'] || [];
-        const events_media = req.files['events_media'] || [];
-        const exhibitions_media = req.files['exhibitions_media'] || [];
-        const online_media = req.files['online_media'] || [];
+        // const birthplace_media = req.files['birthplace_media'] || [];
+        // const events_media = req.files['events_media'] || [];
+        // const exhibitions_media = req.files['exhibitions_media'] || [];
+        // const online_media = req.files['online_media'] || [];
 
-        const uploadImages = async (files) => {
-            const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
-            return await Promise.all(uploadPromises);
-        };
 
-        const birthplaceImages = await uploadImages(birthplace_media);
-        const eventImages = await uploadImages(events_media);
-        const exhibitionImages = await uploadImages(exhibitions_media);
-        const onlineImages = await uploadImages(online_media);
+        const birthplace_media = req.convertedFiles['birthplace_media'] || [];
+        const events_media = req.convertedFiles['events_media'] || [];
+        const exhibitions_media = req.convertedFiles['exhibitions_media'] || [];
+        const online_media = req.convertedFiles['online_media'] || [];
+        
+        // const uploadImages = async (files) => {
+        //     const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
+        //     return await Promise.all(uploadPromises);
+        // };
+
+        // const birthplaceImages = await uploadImages(birthplace_media);
+        // const eventImages = await uploadImages(events_media);
+        // const exhibitionImages = await uploadImages(exhibitions_media);
+        // const onlineImages = await uploadImages(online_media);
 
         const data = {
-            gallery_info: gallery_info || existingGallery.gallery_info,  // Keep existing if not provided
-            gallery_description: gallery_description || existingGallery.gallery_description,  // Keep existing if not provided
-            birthplace_media: birthplaceImages.length ? birthplaceImages : existingGallery.birthplace_media,  // Replace if new images are uploaded
-            events_media: eventImages.length ? eventImages : existingGallery.events_media,  // Replace if new images are uploaded
-            exhibitions_media: exhibitionImages.length ? exhibitionImages : existingGallery.exhibitions_media,  // Replace if new images are uploaded
-            online_media: onlineImages.length ? onlineImages : existingGallery.online_media,  // Replace if new images are uploaded
+            gallery_info: gallery_info || existingGallery.gallery_info,  
+            gallery_description: gallery_description || existingGallery.gallery_description,  
+            birthplace_media: birthplace_media.length ? birthplace_media : existingGallery.birthplace_media, 
+            events_media: events_media.length ? events_media : existingGallery.events_media,  
+            exhibitions_media: exhibitions_media.length ? exhibitions_media : existingGallery.exhibitions_media,  
+            online_media: online_media.length ? online_media : existingGallery.online_media, 
         };
 
-        // Update the gallery with new data
         const updatedGallery = await Gallery.findByIdAndUpdate(id, data, { new: true });
 
-        // If no gallery was updated, return an error
         if (!updatedGallery) {
             return handleResponse(res, 404, 'Gallery data not found.');
         }
 
-        // Pass the updated gallery object to the next middleware
         req.event = updatedGallery;
         next();
 
-        // Send a success response
         return handleResponse(res, 200, 'Gallery data updated successfully.', updatedGallery);
     } catch (error) {
         console.error(error);

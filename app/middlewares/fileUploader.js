@@ -125,4 +125,4 @@ const uploadSingle = multer({
 }).single("image");
 
 
-module.exports = {upload, convertImagesToWebP, uploadMultiple, convertImagesToWebPMultiple, uploadSingle, convertSingleImageToWebP };
+module.exports = { upload, convertImagesToWebP, uploadMultiple, convertImagesToWebPMultiple, uploadSingle, convertSingleImageToWebP };

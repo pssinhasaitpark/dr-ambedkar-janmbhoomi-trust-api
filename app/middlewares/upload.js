@@ -1,7 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const sharp = require("sharp"); 
+const sharp = require("sharp");
 
 const imageConversionMiddleware = (req, res, next) => {
   const BASE_PATH = path.join(__dirname, "../uploads");
@@ -16,21 +16,21 @@ const imageConversionMiddleware = (req, res, next) => {
     },
     filename: function (req, file, cb) {
       const fileNameWithoutExt = path.parse(file.originalname).name;
-      cb(null, fileNameWithoutExt + Date.now() + ".webp"); 
+      cb(null, fileNameWithoutExt + Date.now() + ".webp");
     },
   });
 
   const fileFilter = (req, file, cb) => {
-    cb(null, true); 
+    cb(null, true);
   };
 
   const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 1024 * 5 }, 
+    limits: { fileSize: 1024 * 1024 * 1024 * 5 },
     fileFilter: fileFilter,
   });
 
-  
+
 
   upload.single("image")(req, res, async (err) => {
     if (err) {
@@ -48,15 +48,15 @@ const imageConversionMiddleware = (req, res, next) => {
 
     try {
       await sharp(uploadedFilePath)
-        .webp({ quality: 80 }) 
+        .webp({ quality: 80 })
         .toFile(webpFilePath);
 
       fs.unlinkSync(uploadedFilePath);
 
 
-      req.file.webpPath = webpFilePath; 
+      req.file.webpPath = webpFilePath;
 
-      next(); 
+      next();
     } catch (error) {
       console.error("Error converting image to webp:", error);
       return res.status(500).send({ message: "Failed to convert image." });
@@ -98,6 +98,7 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
     { name: "online_media", maxCount: 10 },
     { name: "cover_image", maxCount: 10 },
     { name: "images", maxCount: 10 },
+    { name: "image", maxCount: 10 },
     { name: "cover_image", maxCount: 10 },
     { name: "case_studies", maxCount: 10 },
     { name: "stories", maxCount: 10 }
@@ -129,13 +130,15 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
 
           fs.unlinkSync(uploadedFilePath);
 
-          const convertedFileUrl = `http://192.168.0.128:8000/media/${webpFileName}`;
+          const convertedFileUrl = `http://192.168.0.128:8080/media/${webpFileName}`;
+
 
           convertedFilePaths.push(convertedFileUrl);
         }
 
         convertedFiles[key] = convertedFilePaths;
       }
+
 
       req.convertedFiles = convertedFiles;
 
@@ -147,4 +150,4 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
   });
 };
 
-module.exports = { imageConversionMiddleware,imageConversionMiddlewareMultiple };
+module.exports = { imageConversionMiddleware, imageConversionMiddlewareMultiple };

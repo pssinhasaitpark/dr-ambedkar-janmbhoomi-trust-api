@@ -21,13 +21,16 @@ exports.createBanner = async (req, res) => {
       }
   
       let imageUrls = [];
-      if (req.files && req.files.length > 0) {
-        const uploadPromises = req.files.map((file) =>
-          cloudinary.uploadImageToCloudinary(file.buffer)
-        );
-        imageUrls = await Promise.all(uploadPromises);
-      }
-  
+    //   if (req.files && req.files.length > 0) {
+    //     const uploadPromises = req.files.map((file) =>
+    //       cloudinary.uploadImageToCloudinary(file.buffer)
+    //     );
+    //     imageUrls = await Promise.all(uploadPromises);
+    //   }
+       
+    if (req.convertedFiles && req.convertedFiles.images) {
+        imageUrls = [...imageUrls, ...req.convertedFiles.images];
+    }
       
       const data = {
         name,
@@ -98,12 +101,17 @@ exports.updateBanner = async (req, res) => {
 
     try {
         let imageUrls = [];
-        if (req.files && req.files.length > 0) {
-            const uploadPromises = req.files.map((file) =>
-                cloudinary.uploadImageToCloudinary(file.buffer)
-            );
-            imageUrls = await Promise.all(uploadPromises);
-        }
+        // if (req.files && req.files.length > 0) {
+        //     const uploadPromises = req.files.map((file) =>
+        //         cloudinary.uploadImageToCloudinary(file.buffer)
+        //     );
+        //     imageUrls = await Promise.all(uploadPromises);
+        // }
+
+             
+    if (req.convertedFiles && req.convertedFiles.images) {
+        imageUrls = [...imageUrls, ...req.convertedFiles.images];
+    }
 
         const updatedBanner = await Banner.findByIdAndUpdate(id, {
             name,

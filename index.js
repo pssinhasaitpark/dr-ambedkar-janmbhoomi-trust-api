@@ -15,7 +15,9 @@ app.use(
       "http://192.168.0.117:3000",
       "http://192.168.0.121:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
-      "https://admin-dr-ambedkar-janmbhoomi.netlify.app"
+      "https://admin-dr-ambedkar-janmbhoomi.netlify.app",
+      "http://192.168.0.114:5173"
+      
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,
@@ -33,6 +35,8 @@ connectDB();
 
 
 require("./app/routes")(app);
+require("./app/routes/media")(app);
+
 
 app.get("/", (req, res) => {
 
