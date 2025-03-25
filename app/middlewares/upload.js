@@ -82,12 +82,12 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
   });
 
   const fileFilter = (req, file, cb) => {
-    cb(null, true); // You can add logic to filter file types if needed
+    cb(null, true);
   };
 
   const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 1024 * 5 }, // File size limit (5 MB)
+    limits: { fileSize: 1024 * 1024 * 1024 * 5 }, 
     fileFilter: fileFilter,
   });
 
@@ -118,6 +118,7 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
       for (const key of fileKeys) {
         const files = req.files[key];
         const convertedFilePaths = [];
+        
 
         for (const file of files) {
           const uploadedFilePath = path.join(BASE_PATH, file.filename);
