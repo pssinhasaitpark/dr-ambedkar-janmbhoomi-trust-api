@@ -12,11 +12,12 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "http://192.168.0.117:3000",
-      "http://192.168.0.121:3000",
+      "http://192.168.0.129:3000",
+      "http://192.168.0.123:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
       "https://admin-dr-ambedkar-janmbhoomi.netlify.app",
-      "http://192.168.0.114:5173"
+      "http://192.168.0.114:5173",
+      "http://192.168.0.111:5173"
       
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
@@ -31,7 +32,6 @@ app.use(express.json());
 
 const connectDB = require('./app/dbConfig/dbConfig');
 connectDB();
-
 
 
 require("./app/routes")(app);
@@ -49,6 +49,11 @@ app.get("/", (req, res) => {
 
 const port = process.env.PORT || 5050;
 
-app.listen(port, host, () =>
-  console.log(`App is listening at port:http://${host}:${port}`)
+// app.listen(port, host, () =>
+//   console.log(`App is listening at port:http://${host}:${port}`)
+// );
+
+
+app.listen(port,  () =>
+  console.log(`App is listening at port:http://localhost:${port}`)
 );
