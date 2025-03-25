@@ -16,9 +16,13 @@ app.use(
       "http://192.168.0.123:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
       "https://admin-dr-ambedkar-janmbhoomi.netlify.app",
-      "http://192.168.0.114:5173",
-      "http://192.168.0.111:5173"
-      
+      "http://82.29.167.130:8000",
+      "http://82.29.167.130",
+      "https://82.29.167.130",
+      "http://topperszone.com",
+      "https://topperszone.com"
+
+
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,
@@ -54,6 +58,6 @@ const port = process.env.PORT || 5050;
 // );
 
 
-app.listen(port,  () =>
+app.listen(port, () =>
   console.log(`App is listening at port:http://localhost:${port}`)
 );
