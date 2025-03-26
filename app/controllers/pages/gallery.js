@@ -26,7 +26,7 @@ exports.addGallery = async (req, res, next) => {
         // const events_media = req.files['events_media'] || [];
         // const exhibitions_media = req.files['exhibitions_media'] || [];
         // const online_media = req.files['online_media'] || [];
-        
+
         let birthplace_media = req.convertedFiles['birthplace_media'] || [];
         let events_media = req.convertedFiles['events_media'] || [];
         let exhibitions_media = req.convertedFiles['exhibitions_media'] || [];
@@ -56,38 +56,34 @@ exports.addGallery = async (req, res, next) => {
         // let exhibitionImages = await uploadImages(exhibitions_media);
         // let onlineImages = await uploadImages(online_media);
 
-
-
-
-
         const mergeImages = (existingImages, newImages, removeImagesList) => {
             if (!Array.isArray(removeImagesList)) {
                 removeImagesList = [];
             }
-        
+
             let updatedImages = existingImages.filter(img => !removeImagesList.includes(img));
-        
+
             updatedImages.unshift(...newImages);
-        
+
             return updatedImages;
         };
-        
+
 
         if (existingGallery) {
-            birthplaceImages = mergeImages(existingGallery.birthplace_media, birthplace_media, removeImages);
-            eventImages = mergeImages(existingGallery.events_media, events_media, removeImages);
-            exhibitionImages = mergeImages(existingGallery.exhibitions_media, exhibitions_media, removeImages);
-            onlineImages = mergeImages(existingGallery.online_media, online_media, removeImages);
+            birthplace_media = mergeImages(existingGallery.birthplace_media, birthplace_media, removeImages);
+            events_media = mergeImages(existingGallery.events_media, events_media, removeImages);
+            exhibitions_media = mergeImages(existingGallery.exhibitions_media, exhibitions_media, removeImages);
+            online_media = mergeImages(existingGallery.online_media, online_media, removeImages);
         }
 
 
         const data = {
             gallery_info,
             gallery_description,
-            birthplace_media: birthplaceImages,
-            events_media: eventImages,
-            exhibitions_media: exhibitionImages,
-            online_media: onlineImages,
+            birthplace_media: birthplace_media,
+            events_media: events_media,
+            exhibitions_media: exhibitions_media,
+            online_media: online_media,
         };
 
 
@@ -110,7 +106,6 @@ exports.addGallery = async (req, res, next) => {
         return handleResponse(res, 500, "Error in adding or updating gallery details", error.message);
     }
 };
-
 
 exports.getGalleryData = async (req, res) => {
     try {
@@ -171,7 +166,7 @@ exports.updateGalleryData = async (req, res, next) => {
         const events_media = req.convertedFiles['events_media'] || [];
         const exhibitions_media = req.convertedFiles['exhibitions_media'] || [];
         const online_media = req.convertedFiles['online_media'] || [];
-        
+
         // const uploadImages = async (files) => {
         //     const uploadPromises = files.map((file) => cloudinary.uploadImageToCloudinary(file.buffer));
         //     return await Promise.all(uploadPromises);
@@ -183,12 +178,12 @@ exports.updateGalleryData = async (req, res, next) => {
         // const onlineImages = await uploadImages(online_media);
 
         const data = {
-            gallery_info: gallery_info || existingGallery.gallery_info,  
-            gallery_description: gallery_description || existingGallery.gallery_description,  
-            birthplace_media: birthplace_media.length ? birthplace_media : existingGallery.birthplace_media, 
-            events_media: events_media.length ? events_media : existingGallery.events_media,  
-            exhibitions_media: exhibitions_media.length ? exhibitions_media : existingGallery.exhibitions_media,  
-            online_media: online_media.length ? online_media : existingGallery.online_media, 
+            gallery_info: gallery_info || existingGallery.gallery_info,
+            gallery_description: gallery_description || existingGallery.gallery_description,
+            birthplace_media: birthplace_media.length ? birthplace_media : existingGallery.birthplace_media,
+            events_media: events_media.length ? events_media : existingGallery.events_media,
+            exhibitions_media: exhibitions_media.length ? exhibitions_media : existingGallery.exhibitions_media,
+            online_media: online_media.length ? online_media : existingGallery.online_media,
         };
 
         const updatedGallery = await Gallery.findByIdAndUpdate(id, data, { new: true });

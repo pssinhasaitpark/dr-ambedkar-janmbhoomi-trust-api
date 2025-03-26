@@ -2,41 +2,42 @@ const { handleResponse } = require("../../utils/helper");
 const { Book } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
+const mongoose = require('mongoose')
 
 exports.addBookDetails = async (req, res, next) => {
   try {
-  
+
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { title, name, description } = req.body;  
-    const { id } = req.query.id ? req.query : req.body;  
+    const { title, name, description } = req.body;
+    const { id } = req.query.id ? req.query : req.body;
 
     let existingBook = null;
     if (id) {
-      existingBook = await Book.findById(id); 
+      existingBook = await Book.findById(id);
     }
 
- 
+
     let removeImages = [];
     if (req.body.removeImages) {
       try {
-        removeImages = JSON.parse(req.body.removeImages);  
+        removeImages = JSON.parse(req.body.removeImages);
       } catch (error) {
         return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
       }
     }
 
-    let imageUrls = existingBook ? [...existingBook.images] : [];  
+    let imageUrls = existingBook ? [...existingBook.images] : [];
 
-    
+
     if (Array.isArray(removeImages)) {
       imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
     }
 
-  
+
     // if (req.files && req.files.length > 0) {
     //   const uploadPromises = req.files.map((file) =>
     //     cloudinary.uploadImageToCloudinary(file.buffer)  
@@ -47,30 +48,30 @@ exports.addBookDetails = async (req, res, next) => {
 
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
+    }
 
-   
+
     const data = {
       name,
       title,
       description,
-      images: imageUrls,  
+      images: imageUrls,
     };
 
     let newBook;
     if (existingBook) {
-      
+
       existingBook.set(data);
       newBook = await existingBook.save();
-      req.event = newBook;  
+      req.event = newBook;
       next();
 
       return handleResponse(res, 200, "Book updated successfully!", newBook);
     } else {
-    
+
       newBook = new Book(data);
       await newBook.save();
-      req.event = newBook;  
+      req.event = newBook;
       next();
 
       return handleResponse(res, 201, "Book added successfully!", newBook);
@@ -98,6 +99,11 @@ exports.getBooksById = async (req, res) => {
     if (!req.params.id) {
       return handleResponse(res, 400, "Please provide an ID");
     }
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
 
     const data = await Book.findById(req.params.id);
 
@@ -118,6 +124,12 @@ exports.updateBookDetails = async (req, res, next) => {
   }
 
   const { id } = req.params;
+
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+  }
+
   const { title, name, description } = req.body;
 
   try {
@@ -129,10 +141,10 @@ exports.updateBookDetails = async (req, res, next) => {
     //   );
     //   imageUrls = await Promise.all(uploadPromises);
     // }
-    
+
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
+    }
     const updatedBook = await Book.findByIdAndUpdate(
       id,
       {
@@ -158,12 +170,18 @@ exports.updateBookDetails = async (req, res, next) => {
 
 exports.deleteBookDetails = async (req, res) => {
   try {
-    const data = await Book.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
+    const data = await Book.findByIdAndDelete(id);
     if (!data) {
       return handleResponse(res, 404, "Book details not found");
     }
 
-    return handleResponse(res, 200, "Book details deleted successfully", {data});
+    return handleResponse(res, 200, "Book details deleted successfully", { data });
   } catch (error) {
     return handleResponse(res, 500, "Error deleting Book details data", error.message);
   }
