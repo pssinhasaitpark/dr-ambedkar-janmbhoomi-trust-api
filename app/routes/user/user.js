@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { users } = require("../../controllers")
-// const { uploadSingle, convertImagesToWebPMultiple, uploadMultiple, convertSingleImageToWebP } = require('../../middlewares/fileUploader');
 const {imageConversionMiddlewareMultiple } = require('../../middlewares/upload');
 
 const { verifyToken, verifyRole, verifyAdmin, verifyResetToken } = require('../../middlewares/jwtAuth');

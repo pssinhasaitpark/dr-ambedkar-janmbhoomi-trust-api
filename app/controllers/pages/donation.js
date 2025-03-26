@@ -2,7 +2,7 @@ const { handleResponse } = require("../../utils/helper");
 const { Donation } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
 // const cloudinary = require("../../middlewares/cloudinaryConfig");
-
+const mongoose = require('mongoose')
 
 exports.addDonationData = async (req, res, next) => {
   try {
@@ -103,9 +103,15 @@ exports.getDonationData = async (req, res) => {
 
 exports.getDonationDataById = async (req, res) => {
   try {
-    if (!req.params.id) {
+    const { id } = req.params;
+    if (!id) {
       return handleResponse(res, 400, "Please provide an ID");
     }
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
 
     const data = await Donation.findById(req.params.id);
 
@@ -127,6 +133,10 @@ exports.updateDonationData = async (req, res, next) => {
   }
 
   const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+  }
   const { title, name, description } = req.body;
 
   try {
@@ -169,7 +179,12 @@ exports.updateDonationData = async (req, res, next) => {
 
 exports.deleteDonationData = async (req, res) => {
   try {
-    const data = await Donation.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
+    const data = await Donation.findByIdAndDelete(id);
     if (!data) {
       return handleResponse(res, 404, "Data not found");
     }

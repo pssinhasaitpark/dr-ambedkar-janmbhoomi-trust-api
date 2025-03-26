@@ -1,8 +1,7 @@
 const { handleResponse } = require("../../utils/helper");
 const { Eventlisting } = require("../../models");
 const { eventListingSchema } = require("../../vailidators/validaters");
-const cloudinary = require("../../middlewares/cloudinaryConfig");
-
+const mongoose = require('mongoose')
 
 exports.addWEventDetails = async (req, res, next) => {
     try {
@@ -18,9 +17,9 @@ exports.addWEventDetails = async (req, res, next) => {
         //   imageUrls = await Promise.all(uploadPromises);
         // }
 
-    if (req.convertedFiles && req.convertedFiles.images) {
-        imageUrls = [...imageUrls, ...req.convertedFiles.images];
-    }
+        if (req.convertedFiles && req.convertedFiles.images) {
+            imageUrls = [...imageUrls, ...req.convertedFiles.images];
+        }
 
         const data = {
             event_title,
@@ -55,7 +54,12 @@ exports.getEventsData = async (req, res) => {
 
 exports.getEventsDataById = async (req, res) => {
     try {
-        if (!req.params.id) {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+        }
+
+        if (!id) {
             return handleResponse(res, 400, "Please provide an ID");
         }
 
@@ -77,6 +81,10 @@ exports.updateEventDetails = async (req, res, next) => {
         return handleResponse(res, 400, error.details[0].message);
     }
     const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
     try {
         const { event_title, organized_by, description } = req.body;
 
@@ -89,34 +97,34 @@ exports.updateEventDetails = async (req, res, next) => {
             }
         }
 
-          let removeImages = [];
-            if (req.body.removeImages) {
-              try {
-                removeImages = JSON.parse(req.body.removeImages);  
-              } catch (error) {
+        let removeImages = [];
+        if (req.body.removeImages) {
+            try {
+                removeImages = JSON.parse(req.body.removeImages);
+            } catch (error) {
                 return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
-              }
             }
-        
-            let imageUrls = existingEvent ? [...existingEvent.images] : [];
-        
-            
-            if (Array.isArray(removeImages)) {
-              imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
-            }
-        
-           
-            // if (req.files && req.files.length > 0) {
-            //   const uploadPromises = req.files.map((file) =>
-            //     cloudinary.uploadImageToCloudinary(file.buffer)  
-            //   );
-            //   const newImageUrls = await Promise.all(uploadPromises);
-            //   imageUrls.push(...newImageUrls);  
-            // }
+        }
 
-    if (req.convertedFiles && req.convertedFiles.images) {
-        imageUrls = [...imageUrls, ...req.convertedFiles.images];
-    }
+        let imageUrls = existingEvent ? [...existingEvent.images] : [];
+
+
+        if (Array.isArray(removeImages)) {
+            imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
+        }
+
+
+        // if (req.files && req.files.length > 0) {
+        //   const uploadPromises = req.files.map((file) =>
+        //     cloudinary.uploadImageToCloudinary(file.buffer)  
+        //   );
+        //   const newImageUrls = await Promise.all(uploadPromises);
+        //   imageUrls.push(...newImageUrls);  
+        // }
+
+        if (req.convertedFiles && req.convertedFiles.images) {
+            imageUrls = [...imageUrls, ...req.convertedFiles.images];
+        }
 
         const updatedEvent = await Eventlisting.findByIdAndUpdate(
             id,
@@ -144,7 +152,11 @@ exports.updateEventDetails = async (req, res, next) => {
 
 exports.deleteEventDetails = async (req, res) => {
     try {
-        const data = await Eventlisting.findByIdAndDelete(req.params.id);
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+        }
+        const data = await Eventlisting.findByIdAndDelete(id);
         if (!data) {
             return handleResponse(res, 404, "Event details not found");
         }

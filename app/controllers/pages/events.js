@@ -1,31 +1,30 @@
 const { handleResponse } = require("../../utils/helper");
 const { Events } = require("../../models");
 const { validationSchema } = require("../../vailidators/validaters");
-const cloudinary = require("../../middlewares/cloudinaryConfig");
-
+const mongoose=require('mongoose')
 
 
 exports.addEvents = async (req, res, next) => {
   try {
-   
+
     const { error } = validationSchema.validate(req.body);
     if (error) {
       return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { title, name, description } = req.body; 
-    const { id } = req.query.id ? req.query : req.body; 
+    const { title, name, description } = req.body;
+    const { id } = req.query.id ? req.query : req.body;
 
     let existingEvent = null;
     if (id) {
-      existingEvent = await Events.findById(id); 
+      existingEvent = await Events.findById(id);
     }
 
-  
+
     let removeImages = [];
     if (req.body.removeImages) {
       try {
-        removeImages = JSON.parse(req.body.removeImages);  
+        removeImages = JSON.parse(req.body.removeImages);
       } catch (error) {
         return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
       }
@@ -33,12 +32,12 @@ exports.addEvents = async (req, res, next) => {
 
     let imageUrls = existingEvent ? [...existingEvent.images] : [];
 
-    
+
     if (Array.isArray(removeImages)) {
       imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
     }
 
-   
+
     // if (req.files && req.files.length > 0) {
     //   const uploadPromises = req.files.map((file) =>
     //     cloudinary.uploadImageToCloudinary(file.buffer)  
@@ -49,29 +48,29 @@ exports.addEvents = async (req, res, next) => {
 
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
+    }
 
     const data = {
       name,
       title,
       description,
-      images: imageUrls,  
+      images: imageUrls,
     };
 
     let newEvent;
     if (existingEvent) {
-    
+
       existingEvent.set(data);
       newEvent = await existingEvent.save();
-      req.event = newEvent;  
+      req.event = newEvent;
       next();
 
       return handleResponse(res, 200, "Event updated successfully!", newEvent);
     } else {
-     
+
       newEvent = new Events(data);
       await newEvent.save();
-      req.event = newEvent;  
+      req.event = newEvent;
       next();
 
       return handleResponse(res, 201, "Event added successfully!", newEvent);
@@ -97,11 +96,17 @@ exports.getEventsData = async (req, res) => {
 
 exports.getEventsDataById = async (req, res) => {
   try {
-    if (!req.params.id) {
+
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
+    if (!id) {
       return handleResponse(res, 404, "Please provide ID");
     }
 
-    const data = await Events.findById(req.params.id);
+    const data = await Events.findById(id);
 
     if (!data) {
       return handleResponse(res, 404, "Event data not found with provided ID");
@@ -120,6 +125,9 @@ exports.updateEvent = async (req, res, next) => {
   }
 
   const { id } = req.params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+  }
   const { title, name, description } = req.body;
 
   try {
@@ -134,7 +142,7 @@ exports.updateEvent = async (req, res, next) => {
 
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
+    }
 
     const updatedEvent = await Events.findByIdAndUpdate(
       id,
@@ -164,11 +172,16 @@ exports.updateEvent = async (req, res, next) => {
 
 exports.deleteEvent = async (req, res) => {
   try {
-    const data = await Events.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
+    const data = await Events.findByIdAndDelete(id);
     if (!data) {
       return handleResponse(res, 404, "Event not found");
     }
-    return handleResponse(res, 200, "Event deleted successfully", {data});
+    return handleResponse(res, 200, "Event deleted successfully", data);
   } catch (error) {
     return handleResponse(res, 500, "Error deleting event details", error.message);
   }

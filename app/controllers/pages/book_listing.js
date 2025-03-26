@@ -2,6 +2,7 @@ const { handleResponse } = require("../../utils/helper");
 const { Booklisting } = require("../../models");
 const { bookListingSchema } = require("../../vailidators/validaters");
 const cloudinary = require("../../middlewares/cloudinaryConfig");
+const mongoose = require('mongoose')
 
 exports.addBookDetails = async (req, res, next) => {
     try {
@@ -19,7 +20,9 @@ exports.addBookDetails = async (req, res, next) => {
         // } else {
         //     return handleResponse(res, 400, "Cover image is required");
         // }
-        const coverImageUrl = req.convertedFiles.cover_image[0];
+        // const coverImageUrl = req.convertedFiles.cover_image[0];
+        const coverImageUrl = (req.convertedFiles && req.convertedFiles.cover_image && req.convertedFiles.cover_image[0]) || existingBook.cover_image;
+
 
         let imageUrls = [];
         // if (req.files && req.files.images && req.files.images.length > 0) {
@@ -36,11 +39,14 @@ exports.addBookDetails = async (req, res, next) => {
             author_name,
             description,
             cover_image: coverImageUrl,
-            images: imageUrls,  
+            images: imageUrls,
         };
 
         const newBookDetails = new Booklisting(data);
         await newBookDetails.save();
+
+        req.event = newBookDetails;
+        next();
 
         return handleResponse(res, 201, "Book details added successfully!", newBookDetails);
     } catch (error) {
@@ -84,6 +90,10 @@ exports.updateBookDetails = async (req, res, next) => {
         return handleResponse(res, 400, error.details[0].message);
     }
     const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
     try {
         const { book_title, author_name, description } = req.body;
 
@@ -127,7 +137,7 @@ exports.updateBookDetails = async (req, res, next) => {
         // const coverImageUrl = req.convertedFiles.cover_image[0];
 
         const coverImageUrl = (req.convertedFiles && req.convertedFiles.cover_image && req.convertedFiles.cover_image[0]) || existingBook.cover_image;
-          
+
         if (req.convertedFiles && req.convertedFiles.images) {
             imageUrls = [...imageUrls, ...req.convertedFiles.images];
         }
@@ -149,6 +159,7 @@ exports.updateBookDetails = async (req, res, next) => {
         }
 
         req.event = updatedBook;
+        next();
 
         return handleResponse(res, 200, "Book details updated successfully.", updatedBook);
     } catch (error) {
@@ -159,7 +170,13 @@ exports.updateBookDetails = async (req, res, next) => {
 
 exports.deleteBookDetails = async (req, res) => {
     try {
-        const data = await Booklisting.findByIdAndDelete(req.params.id);
+        const { id } = req.params;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+        }
+
+        const data = await Booklisting.findByIdAndDelete(id);
         if (!data) {
             return handleResponse(res, 404, "Book details not found");
         }

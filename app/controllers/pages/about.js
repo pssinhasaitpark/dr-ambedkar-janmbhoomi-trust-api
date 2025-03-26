@@ -1,19 +1,19 @@
 const { handleResponse } = require('../../utils/helper');
 const { Biography } = require('../../models');
 const { biographySchema } = require('../../vailidators/validaters');
-// const cloudinary = require("../../middlewares/cloudinaryConfig");
+const mongoose = require('mongoose');
 
 
 
 exports.createBiography = async (req, res, next) => {
   try {
-       const { error } = biographySchema.validate(req.body);
-           if (error) {
-               return handleResponse(res, 400, error.details[0].message);
-           }
+    const { error } = biographySchema.validate(req.body);
+    if (error) {
+      return handleResponse(res, 400, error.details[0].message);
+    }
 
-    const { title, name, biography } = req.body;  
-    const { id } = req.query;  
+    const { title, name, biography } = req.body;
+    const { id } = req.query;
 
     let existingBiography = null;
     if (id) {
@@ -26,20 +26,20 @@ exports.createBiography = async (req, res, next) => {
     let removeImages = [];
     if (req.body.removeImages) {
       try {
-        removeImages = JSON.parse(req.body.removeImages); 
+        removeImages = JSON.parse(req.body.removeImages);
       } catch (error) {
         return handleResponse(res, 400, "Invalid removeImages format. Must be a JSON array.");
       }
     }
-   
+
     let imageUrls = existingBiography ? [...existingBiography.images] : [];
 
-   
+
     if (Array.isArray(removeImages)) {
       imageUrls = imageUrls.filter((img) => !removeImages.includes(img));
     }
 
-    
+
     // if (req.files && req.files.length > 0) {
     //   const uploadPromises = req.files.map((file) =>
     //     cloudinary.uploadImageToCloudinary(file.buffer)
@@ -48,19 +48,19 @@ exports.createBiography = async (req, res, next) => {
     //   imageUrls.push(...newImageUrls);
     // }
 
-     
+
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
-    
+    }
+
 
     if (existingBiography) {
-     
+
       existingBiography.set({
         title: title || existingBiography.title,
         name: name || existingBiography.name,
         biography: biography || existingBiography.biography,
-        images: imageUrls,  
+        images: imageUrls,
       });
 
       await existingBiography.save();
@@ -68,7 +68,7 @@ exports.createBiography = async (req, res, next) => {
         biography: existingBiography.toObject(),
       });
     } else {
-     
+
       const newBiography = new Biography({
         title,
         name,
@@ -81,10 +81,11 @@ exports.createBiography = async (req, res, next) => {
       req.event = existingBiography;
       next();
 
-      return handleResponse(res, 201, "Biography created successfully!", {
-        biography: newBiography.toObject(),
-      });
-    }
+      // return handleResponse(res, 201, "Biography created successfully!", {
+      //   biography: newBiography.toObject(),
+      // });
+      return handleResponse(res, 201, "Biography created successfully!", newBiography
+  )}
   } catch (error) {
     return handleResponse(res, 500, "Error creating or updating biography", {
       error: error.message,
@@ -131,6 +132,11 @@ exports.updateBiography = async (req, res) => {
 
 
   const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+             return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+         }
+
   const { title, name, biography } = req.body;
 
   try {
@@ -141,11 +147,11 @@ exports.updateBiography = async (req, res) => {
     //   );
     //   imageUrls = await Promise.all(uploadPromises);
     // }
-         
+
     if (req.convertedFiles && req.convertedFiles.images) {
       imageUrls = [...imageUrls, ...req.convertedFiles.images];
-  }
-    
+    }
+
 
     const updatedBiography = await Biography.findByIdAndUpdate(
       id,
@@ -153,11 +159,6 @@ exports.updateBiography = async (req, res) => {
         title,
         name,
         biography,
-        // born_details,
-        // death_details,
-        // short_description,
-        // awards,
-        // achievements,
         images: imageUrls,
       },
       { new: true }
@@ -176,12 +177,18 @@ exports.updateBiography = async (req, res) => {
 
 exports.deleteBiography = async (req, res) => {
   try {
-    const data = await Biography.findByIdAndDelete(req.params.id);
+    const {id}=req.params;
+
+     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+                return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+            }
+
+    const data = await Biography.findByIdAndDelete(id);
     if (!data) {
       return handleResponse(res, 404, "Biography not found");
     }
 
-    return handleResponse(res, 200, "Biography deleted successfully", {data});
+    return handleResponse(res, 200, "Biography deleted successfully",  data );
   } catch (error) {
     return handleResponse(res, 500, "Error deleting biography data", error.message);
   }

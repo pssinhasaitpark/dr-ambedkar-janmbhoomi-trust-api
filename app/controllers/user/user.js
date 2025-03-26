@@ -31,7 +31,7 @@ exports.registerUser = async (req, res) => {
             }
             return handleResponse(res, 400, errorMessage.trim());
         }
-        
+
         const data = { user_name, full_name, email, mobile, password, user_role, designations };
 
         const imageUrl = req.convertedFiles.image[0];
@@ -125,6 +125,10 @@ exports.updateUser = async (req, res) => {
     const { user_name, full_name, email, mobile, password, designations, user_role } = req.body;
     const userId = req.params.id;
 
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
+
     const validRoles = ['user', 'admin', 'super-admin', 'trustees'];
     if (user_role && !validRoles.includes(user_role)) {
         return handleResponse(res, 400, 'Invalid user role provided.');
@@ -170,9 +174,9 @@ exports.updateUser = async (req, res) => {
         // const imageUrl = req.convertedFiles.image[0] || existingUser.image;
         // updatedData.image = imageUrl;
 
-          // Check if an image is provided
-          const imageUrl = (req.convertedFiles && req.convertedFiles.image && req.convertedFiles.image[0]) || existingUser.image;
-          updatedData.image = imageUrl;
+        // Check if an image is provided
+        const imageUrl = (req.convertedFiles && req.convertedFiles.image && req.convertedFiles.image[0]) || existingUser.image;
+        updatedData.image = imageUrl;
 
         // if (req.file) {
         //     try {

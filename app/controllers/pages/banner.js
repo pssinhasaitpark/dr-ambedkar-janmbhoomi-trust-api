@@ -2,6 +2,7 @@ const { handleResponse } = require('../../utils/helper');
 const { bannerSchema } = require('../../vailidators/validaters');
 const { Banner } = require('../../models');
 const cloudinary = require("../../middlewares/cloudinaryConfig");
+const mongoose = require('mongoose');
 
 
 exports.createBanner = async (req, res) => {
@@ -97,6 +98,12 @@ exports.getBannerById = async (req, res) => {
 
 exports.updateBanner = async (req, res) => {
     const { id } = req.params;
+ 
+    
+         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+                    return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+                }
+
     const { name, heading, beginning_date, completion_date, opening_date, location } = req.body;
 
     try {
@@ -136,6 +143,10 @@ exports.updateBanner = async (req, res) => {
 
 exports.deleteBanner = async (req, res) => {
     const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return handleResponse(res, 400, "The provided ID is not valid. Please provide a valid ID.");
+    }
 
     try {
         const banner = await Banner.findByIdAndDelete(id);
