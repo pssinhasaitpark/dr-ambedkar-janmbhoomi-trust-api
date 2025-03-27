@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { users } = require("../../controllers")
-const {imageConversionMiddlewareMultiple } = require('../../middlewares/upload');
+const { imageConversionMiddlewareMultiple } = require('../../middlewares/upload');
 
 const { verifyToken, verifyRole, verifyAdmin, verifyResetToken } = require('../../middlewares/jwtAuth');
 
 
 router.post("/register", verifyToken, verifyAdmin, imageConversionMiddlewareMultiple, users.registerUser);
+
+router.post("/admin/register", imageConversionMiddlewareMultiple, users.registerAdmin);
+
 
 router.post("/login", users.loginUser, verifyRole);
 

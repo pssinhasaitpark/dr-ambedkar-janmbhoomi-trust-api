@@ -131,7 +131,7 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
 
           fs.unlinkSync(uploadedFilePath);
 
-          const convertedFileUrl = `http://82.29.167.130:8000/media/${webpFileName}`;
+          const convertedFileUrl = `${process.env.IMAGEURL}${webpFileName}`;
 
 
           convertedFilePaths.push(convertedFileUrl);

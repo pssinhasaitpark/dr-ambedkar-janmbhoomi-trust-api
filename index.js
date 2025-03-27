@@ -19,6 +19,8 @@ app.use(
       "http://82.29.167.130:8000",
       "http://82.29.167.130",
       "https://82.29.167.130",
+      "http://82.29.167.130:3000",
+      "http://82.29.167.130:3001",
       "http://topperszone.com",
       "https://topperszone.com"
 
