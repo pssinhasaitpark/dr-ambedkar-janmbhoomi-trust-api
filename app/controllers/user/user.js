@@ -58,6 +58,54 @@ exports.registerUser = async (req, res) => {
     }
 };
 
+exports.registerAdmin = async (req, res) => {
+    const { error } = userRegistrationSchema.validate(req.body);
+    if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+    }
+
+    const { user_name, full_name, email, mobile, password, designations, user_role } = req.body;
+
+    try {
+        const existingUser = await Users.findOne({ $or: [{ user_name }, { email }] });
+
+        if (existingUser) {
+            let errorMessage = '';
+            if (existingUser.user_name === user_name) {
+                errorMessage += 'Username is already taken. ';
+            }
+            if (existingUser.email === email) {
+                errorMessage += 'Email is already registered.';
+            }
+            return handleResponse(res, 400, errorMessage.trim());
+        }
+
+        const data = { user_name, full_name, email, mobile, password, user_role, designations };
+
+        const imageUrl = req.convertedFiles.image[0];
+        data.image = imageUrl;
+
+
+        // if (req.file) {
+        //     try {
+        //         const imageUrl = await cloudinary.uploadImageToCloudinary(req.file.buffer);
+        //         data.image = imageUrl;
+        //     } catch (cloudinaryError) {
+        //         console.error('Error uploading image to Cloudinary:', cloudinaryError);
+        //         return handleResponse(res, 500, 'Error uploading image to Cloudinary');
+        //     }
+        // }
+
+        const newUser = new Users(data);
+        await newUser.save();
+
+        handleResponse(res, 201, 'User created successfully!', newUser);
+    } catch (error) {
+        console.error(error);
+        handleResponse(res, 500, error.message);
+    }
+};
+
 exports.loginUser = async (req, res, next) => {
     const { error } = userLoginSchema.validate(req.body);
     if (error) return handleResponse(res, 400, error.details[0].message);
