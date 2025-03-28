@@ -12,8 +12,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "http://192.168.0.129:3000",
-      "http://192.168.0.123:3000",
+      "http://192.168.0.130:3000",
       "https://dr-ambedkarnagar-janmbhoomi.netlify.app",
       "https://admin-dr-ambedkar-janmbhoomi.netlify.app",
       "http://82.29.167.130:8000",
@@ -22,9 +21,8 @@ app.use(
       "http://82.29.167.130:3000",
       "http://82.29.167.130:3001",
       "http://topperszone.com",
-      "https://topperszone.com"
-
-
+      "https://topperszone.com",
+      "http://192.168.0.133:3000",
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,
