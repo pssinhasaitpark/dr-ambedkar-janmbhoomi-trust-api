@@ -107,8 +107,8 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
       return res.status(400).send({ message: "File upload failed." });
     }
 
-    if (!req.files) {
-      return res.status(400).send({ message: "No files were uploaded." });
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return next();
     }
 
     const fileKeys = Object.keys(req.files);
@@ -118,7 +118,6 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
       for (const key of fileKeys) {
         const files = req.files[key];
         const convertedFilePaths = [];
-        
 
         for (const file of files) {
           const uploadedFilePath = path.join(BASE_PATH, file.filename);
@@ -133,13 +132,11 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
 
           const convertedFileUrl = `${process.env.IMAGEURL}${webpFileName}`;
 
-
           convertedFilePaths.push(convertedFileUrl);
         }
 
         convertedFiles[key] = convertedFilePaths;
       }
-
 
       req.convertedFiles = convertedFiles;
 
@@ -150,5 +147,6 @@ const imageConversionMiddlewareMultiple = (req, res, next) => {
     }
   });
 };
+
 
 module.exports = { imageConversionMiddleware, imageConversionMiddlewareMultiple };
